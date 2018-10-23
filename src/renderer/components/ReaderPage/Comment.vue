@@ -16,14 +16,16 @@
 
 <script lang="ts">
 import Vue from 'vue'
-import Component from 'vue-class-component'
-import { Prop } from 'vue-property-decorator'
 import { Comment } from '../../lib/Database'
 
-@Component
-export default class CommentVue extends Vue {
-  @Prop(Object) comment!: Comment
-}
+export default Vue.extend({
+  name: 'CommentVue',
+  props: {
+    comment: {
+      type: Object as () => Comment
+    }
+  }
+})
 </script>
 
 <style lang="scss" scoped>

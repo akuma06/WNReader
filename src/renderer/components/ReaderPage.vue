@@ -7,24 +7,43 @@
       <h1>{{ chapter.title }}</h1>
     </div>
     <div class="main" ref="readerContent" @scroll="handleScroll" @mousewheel="handleWheel">
-      <div class="content" v-html="chapter.content"></div> 
+      <div class="content">
+        <h1 class="chapter-title" v-if="!this.loading">{{ chapter.title }}</h1>
+        <div class="chapter-content" v-if="!this.loading" v-html="chapter.content" @click.prevent="handleContentClick"></div>
+        <div class="chapter-content" v-if="this.loading">Loading...</div>
+      </div>
       <div class="side">
         <ul>
           <li>
-            <a href="#" @click.prevent="handleComments">
+            <a href="#" @click.prevent="handlePanel(Panels.Comments)" title="Show comments">
               <font-awesome-icon icon="comment" />
             </a>
           </li>
           <li>
-            <a href="#" @click.prevent="handleFullscreen">
+            <a href="#" @click.prevent="handlePanel(Panels.Chapters)" title="Chapter list">
+              <font-awesome-icon icon="list" />
+            </a>
+          </li>
+          <li>
+            <a href="#" @click.prevent="handleFullscreen" title="Fullscreen">
               <font-awesome-icon icon="external-link-alt" />
             </a>
           </li>
         </ul>
       </div>
-      <div class="comments" :class="{ show: showComments }">
-        <comment-vue v-for="(comment, i) in comments" :key="'comm' + i" :comment="comment" />
-      </div>
+    </div>
+    <div class="panel comments" ref="comments" :class="{ show: showPanel === Panels.Comments }">
+      <comment-vue v-for="(comment, i) in comments" :key="'comm' + i" :comment="comment" />
+    </div>
+    <div class="panel chapterlist" ref="chapterlist" :class="{ show: showPanel === Panels.Chapters }">
+      <a
+        href="#"
+        v-for="(c, i) in chapters"
+        :key="'chapter_' + i"
+        :class="{ selected: c.id === chapter.id }"
+        @click.prevent="handleChapterItem(c)">
+        <span>{{ c.title }}</span>
+      </a>
     </div>
   </div>
 </template>
@@ -36,14 +55,23 @@ import Website from '../lib/Website'
 import websites from '../lib/websites'
 import CommentVue from './ReaderPage/Comment.vue'
 
+enum Panels {
+  None = 1,
+  Comments,
+  Chapters,
+}
+
 type ReaderPageData = {
   chapter: Chapter | null
+  chapters: Chapter[]
   novel: Novel | null
   websiteModel: Website | null
   comments: Comment[]
-  showComments: boolean
+  showPanel: Panels
   enableFade: boolean
   showHeader: boolean
+  loading: boolean
+  Panels: typeof Panels
 }
 
 let timeoutAnim: NodeJS.Timer | null = null
@@ -58,30 +86,49 @@ export default Vue.extend({
     const websiteLoader = websites[this.$route.params.website]
     return {
       chapter: null,
+      chapters: [],
       novel: null,
       websiteModel: (websiteLoader !== undefined) ? new Website({ website: websiteLoader }) : null,
       comments: [],
-      showComments: false,
+      showPanel: Panels.None,
       enableFade: true,
-      showHeader: true
+      showHeader: true,
+      loading: true,
+      Panels: Panels
     }
   },
   methods: {
+    handleChapterItem (c: Chapter) {
+      if (this.websiteModel !== null && c.id !== undefined) {
+        this.loading = true
+        this.websiteModel.loadChapter(c.novel, c.id)
+          .then(chapterResponse => {
+            this.chapter = chapterResponse.chapter
+            db.novels.update(c.novel, { lastRead: this.chapter })
+            this.checkPosition()
+            this.loading = false
+          })
+      }
+    },
     nextChapter () {
       if (this.websiteModel !== null && this.chapter !== null) {
+        this.loading = true
         this.websiteModel.nextChapter(this.chapter)
           .then(chapterResponse => {
             this.chapter = chapterResponse.chapter
             this.checkPosition()
+            this.loading = false
           })
       }
     },
     prevChapter () {
       if (this.websiteModel !== null && this.chapter !== null) {
+        this.loading = true
         this.websiteModel.prevChapter(this.chapter)
           .then(chapterResponse => {
             this.chapter = chapterResponse.chapter
             this.checkPosition()
+            this.loading = false
           })
       }
     },
@@ -89,10 +136,14 @@ export default Vue.extend({
       if (this.websiteModel !== null && this.chapter !== null) {
         switch (e.which) {
           case 38:
-            this.hidedown(e)
+            if (!this.loading) {
+              this.hidedown(e)
+            }
             break
           case 40:
-            this.hideup(e)
+            if (!this.loading) {
+              this.hideup(e)
+            }
             break
         }
       }
@@ -121,7 +172,15 @@ export default Vue.extend({
         }
       }
     },
+    handleContentClick () {
+      if (this.showPanel !== Panels.None) {
+        this.showPanel = Panels.None
+      }
+    },
     handleWheel (e: MouseWheelEvent) {
+      if (this.loading) {
+        return
+      }
       if (timeoutAnim !== null) {
         clearTimeout(timeoutAnim)
       }
@@ -144,16 +203,29 @@ export default Vue.extend({
     handleScroll () {
       const reader = this.$refs['readerContent'] as HTMLDivElement
       if (this.chapter !== null && this.chapter.id && reader && this.novel && this.novel.id) {
+        let lastPosition: number | undefined
         if (reader.scrollHeight <= (reader.scrollTop + 1.3 * reader.offsetHeight) || reader.scrollTop <= 0.3 * reader.offsetHeight) {
-          this.chapter.lastPosition = undefined
-        } else this.chapter.lastPosition = reader.scrollTop
-        this.novel.lastRead = this.chapter
-        db.chapters.update(this.chapter.id, this.chapter)
-        db.novels.update(this.novel.id, this.novel)
+          lastPosition = undefined
+        } else lastPosition = reader.scrollTop
+        db.chapters.update(this.chapter.id, { lastPosition })
+        db.novels.update(this.novel.id, { lastRead: this.chapter })
       }
     },
-    handleComments () {
-      this.showComments = !this.showComments
+    handlePanel (panel: Panels) {
+      if (this.showPanel === panel) {
+        this.showPanel = Panels.None
+      } else {
+        this.showPanel = panel
+        if (panel === Panels.Chapters) {
+          const chapterListPanel = this.$refs['chapterlist'] as HTMLDivElement
+          if (chapterListPanel) {
+            const selected = chapterListPanel.querySelector('.selected') as HTMLAnchorElement
+            if (selected) {
+              setTimeout(() => selected.scrollIntoView({ block: 'nearest', inline: 'nearest' }), 300)
+            }
+          }
+        }
+      }
     },
     handleFullscreen (fs?: boolean) {
       if (fs === undefined) {
@@ -237,7 +309,6 @@ export default Vue.extend({
     chapter (newChapter: Chapter | null, oldChapter: Chapter | null) {
       if (newChapter !== null && this.novel && this.websiteModel !== null) {
         this.websiteModel.loadComments(this.novel, newChapter).then(comments => {
-          console.log(comments)
           this.comments = comments
         })
       }
@@ -249,8 +320,10 @@ export default Vue.extend({
       this.websiteModel.loadChapter(parseInt(novel), parseInt(chapter)).then(chapterResponse => {
         this.novel = chapterResponse.novel
         this.chapter = chapterResponse.chapter
+        this.chapters = chapterResponse.chapters
         this.checkPosition()
         this.fadeInHeader()
+        this.loading = false
         return chapterResponse
       })
       document.addEventListener('keyup', this.handleKeyUp)
@@ -343,22 +416,14 @@ export default Vue.extend({
       padding: 2.5em;
       margin: auto;
       background-color: white;
-      font-size: 24px;
-    }
-    .comments {
-      display: none;
-      position: fixed;
-      top: 0px;
-      right: 40px;
-      z-index: 2;
-      height: 100%;
-      background-color: white;
-      width: 200px;
-      padding: 1em;
-      box-shadow: -1px 0px 6px black;
-      &.show {
-        display: block;
-        animation: slideRight .2s ease;
+      .chapter-content {
+        font-size: 24px;
+      }
+      h1.chapter-title {
+        border-bottom: 1px solid black;
+        padding-bottom: 0.5em;
+        text-align: center;
+        margin-bottom: 0.5em;
       }
     }
     .side {
@@ -390,6 +455,52 @@ export default Vue.extend({
           &:hover {
             background-color: rgb(61, 61, 61)
           }
+        }
+      }
+    }
+  }
+  .panel {
+    display: none;
+    position: fixed;
+    top: 0px;
+    right: 40px;
+    z-index: 2;
+    height: 100%;
+    background-color: white;
+    width: 250px;
+    box-shadow: -1px 0px 6px black;
+    overflow: auto;
+    &.show {
+      display: block;
+      animation: slideRight .2s ease;
+    }
+    &.comments {
+      .comment-item {
+        margin: 1em;
+        &:first-child {
+          margin-top: 35px;
+        }
+      }
+    }
+    &.chapterlist {
+      a {
+        color: black;
+        display: block;
+        border-bottom: 1px solid black;
+        text-overflow: ellipsis;
+        line-height: 30px;
+        height: 40px;
+        overflow: hidden;
+        white-space: nowrap;
+        span {
+          padding: 5px 2px;
+          display: inline-block;
+          text-overflow: ellipsis;
+        }
+        &.selected {
+          font-weight: bold;
+          background-color: var(--biolet);
+          color: white;
         }
       }
     }

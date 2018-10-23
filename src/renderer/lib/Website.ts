@@ -1,5 +1,11 @@
 import { db, Novel, Chapter, Comment } from './Database'
 
+export type WebsiteStyle = {
+  readonly name?: Partial<CSSStyleDeclaration>
+  readonly header?: Partial<CSSStyleDeclaration>
+  readonly iconHeader?: Partial<CSSStyleDeclaration>
+}
+
 export interface WebsiteLoader {
     getNovels(): Promise<Novel[]>
     getNovel(novel: Novel): Promise<NovelResponse>
@@ -9,6 +15,7 @@ export interface WebsiteLoader {
     readonly url: string
     readonly slug: string
     readonly icon: string
+    readonly style: WebsiteStyle
 }
 
 export type WebsiteParameters = {
@@ -24,6 +31,7 @@ export interface NovelResponse {
 export interface ChapterResponse {
   novel: Novel
   chapter: Chapter
+  chapters: Chapter[]
 }
 
 export default class Website {
@@ -48,9 +56,10 @@ export default class Website {
             novel.website = this.website.slug
             return db.novels.add(novel)
           } else if (result.id !== undefined) {
-            novel.description = result.description
+            novel.description = (result.description !== '') ? result.description : novel.description
             novel.bookmarked = result.bookmarked
-            novel.cover = (result.cover !== "") ? result.cover : novel.cover
+            novel.cover = (result.cover !== '') ? result.cover : novel.cover
+            db.novels.update(result.id, novel)
             return result.id
           } else {
             throw Error('Id du résultat non défini')
@@ -117,8 +126,9 @@ export default class Website {
       if (chapter === undefined) {
         throw Error('Impossible de trouver le chapter')
       }
+      const chapters = await db.chapters.where({ novel: novelId }).toArray()
       const shouldRefresh = refresh || (chapter.lastUpdate.getTime() + 300 * 1000) < new Date().getTime()
-      const chapterResponse: ChapterResponse = { novel, chapter }
+      const chapterResponse: ChapterResponse = { novel, chapter, chapters }
 
       if (shouldRefresh || chapterResponse.chapter.content === '') {
         chapterResponse.chapter = await this.website.getChapter(novel, chapterResponse.chapter)
@@ -128,21 +138,23 @@ export default class Website {
       return chapterResponse
     }
 
-    public async loadComments(novel: Novel, chapter: Chapter): Promise<Comment[]> {
-      return await this.website.getComments(novel, chapter)
+    public async loadComments (novel: Novel, chapter: Chapter): Promise<Comment[]> {
+      return this.website.getComments(novel, chapter)
     }
 
-    public async nextChapter(current: Chapter): Promise<ChapterResponse> {
+    public async nextChapter (current: Chapter): Promise<ChapterResponse> {
       if (current.next === undefined) {
         throw Error('No next chapter found')
       }
       const result = await db.chapters.where('title')
-      .equals(current.next)
-      .or('url')
-      .equals(current.next).first()
+        .equals(current.next)
+        .or('slug')
+        .equals(current.next)
+        .or('url')
+        .equals(current.next).first()
       if (result === undefined) {
         if (current.next !== undefined && current.next.match('http')) {
-          const newChapter = await db.chapters.put({ url: current.next, novel: current.novel, title: '', content: '', lastUpdate: new Date(), prev: current.title })
+          const newChapter = await db.chapters.put({ url: current.next, novel: current.novel, title: '', slug: '', content: '', lastUpdate: new Date(), prev: current.slug })
           return this.loadChapter(current.novel, newChapter, true)
         } else {
           throw Error('Next chapter not found')
@@ -154,17 +166,19 @@ export default class Website {
       return this.loadChapter(current.novel, result.id)
     }
 
-    public async prevChapter(current: Chapter): Promise<ChapterResponse> {
+    public async prevChapter (current: Chapter): Promise<ChapterResponse> {
       if (current.prev === undefined) {
         throw Error('No previous chapter found')
       }
       const result = await db.chapters.where('title')
-      .equals(current.prev)
-      .or('url')
-      .equals(current.prev).first()
+        .equals(current.prev)
+        .or('slug')
+        .equals(current.prev)
+        .or('url')
+        .equals(current.prev).first()
       if (result === undefined) {
         if (current.prev !== undefined && current.prev.match('http')) {
-          const newChapter = await db.chapters.put({ url: current.prev, novel: current.novel, title: '', content: '', lastUpdate: new Date(), next: current.title })
+          const newChapter = await db.chapters.put({ url: current.prev, novel: current.novel, title: '', slug: '', content: '', lastUpdate: new Date(), next: current.slug })
           return this.loadChapter(current.novel, newChapter, true)
         } else {
           throw Error('Next chapter not found')

@@ -7,20 +7,24 @@
 
 <script lang="ts">
 import Vue from 'vue'
-import Component from 'vue-class-component'
-import { Prop, Emit } from 'vue-property-decorator'
 import { Chapter, Novel } from '../../lib/Database'
 
-@Component({})
-export default class ChapterListItem extends Vue {
-  @Prop(Object) chapter!: Chapter
-  @Prop(Object) novel!: Novel
-
-  @Emit('selected')
-  onSelected () {
-    return this.chapter
+export default Vue.extend({
+  name: 'ChapterListItem',
+  props: {
+    chapter: {
+      type: Object as () => Chapter
+    },
+    novel: {
+      type: Object as () => Novel
+    }
+  },
+  methods: {
+    onSelected () {
+      this.$emit('selected', this.chapter)
+    }
   }
-}
+})
 </script>
 
 <style lang="scss" scoped>

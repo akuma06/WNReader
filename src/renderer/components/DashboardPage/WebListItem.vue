@@ -1,25 +1,27 @@
 <template>
     <button type="button" class="website-item" @click="onSelected">
         <img :src="website.icon" width='124' :alt="website.name" />
-        <h3>{{website.name}}</h3>
+        <h3 :style="website.style.name">{{website.name}}</h3>
     </button>
 </template>
 
 <script lang="ts">
 import Vue from 'vue'
-import Component from 'vue-class-component'
-import { Prop, Emit } from 'vue-property-decorator'
 import { WebsiteLoader } from '../../lib/Website'
 
-@Component
-export default class WebsiteListItem extends Vue {
-  @Prop(Object) website!: WebsiteLoader
-
-  @Emit('selected')
-  onSelected (): WebsiteLoader {
-    return this.website
+export default Vue.extend({
+  name: 'WebsiteListItem',
+  props: {
+    website: {
+      type: Object as () => WebsiteLoader
+    }
+  },
+  methods: {
+    onSelected () {
+      this.$emit('selected', this.website)
+    }
   }
-}
+})
 </script>
 
 <style lang="scss" scoped>

@@ -1,10 +1,10 @@
 <template>
-  <div class="website" v-if="website !== null">
-    <div class="website-img">
-      <router-link :to="{ name: 'dashboard-page' }" class="home">
+  <div class="website" v-if="website !== null" @scroll="handleScroll">
+    <div class="website-img" ref="websiteHeader" :style="website.style.header">
+      <router-link :to="{ name: 'dashboard-page' }" class="home" :style="website.style.header">
         <font-awesome-icon icon="home" size="lg" />
       </router-link>
-      <img :src="website.icon" :alt="website.name" />
+      <img :src="website.icon" :alt="website.name" :style="website.style.iconHeader" />
       <h1>{{ website.name }}</h1>
     </div>
     <div class="novels-list">
@@ -45,8 +45,17 @@ export default Vue.extend({
   },
   methods: {
     onSelected (novel: Novel) {
-      console.log(novel)
       if (novel !== null && novel.id !== undefined) this.$router.push({name: 'novel-page', params: { novel: novel.id.toString(), website: novel.website }})
+    },
+    handleScroll (e: UIEvent) {
+      const websiteHeader = this.$refs['websiteHeader'] as HTMLDivElement
+      if (websiteHeader) {
+        const cover = websiteHeader.querySelector('img') as HTMLImageElement
+        const container = e.target as HTMLDivElement
+        if (cover && container) {
+          cover.classList.toggle('sticky', container.scrollTop > 100)
+        }
+      }
     }
   },
   computed: {
@@ -73,7 +82,6 @@ export default Vue.extend({
 
 <style lang="scss" scoped>
 .website {
-  margin: 0.5em;
   height: 100%;
   overflow: auto;
   .website-img {
@@ -82,6 +90,9 @@ export default Vue.extend({
     margin-top: 120px;
     background: white;
     height: 45px;
+    position: sticky;
+    top: 0px;
+    z-index: 3;
     .home {
       color: black;
       margin: 0 15px;
@@ -95,6 +106,14 @@ export default Vue.extend({
       border: 5px solid white;
       position: relative;
       top: -115px;
+      transition: height .2s, top .2s, width .2s, border-width .2s, border-radius .2s;
+      &.sticky {
+        height: 45px;
+        border-radius: 2em;
+        top: 0px;
+        width: 45px;
+        border-width: 0;
+      }
     }
     h1 {
       padding: 5px;
@@ -109,6 +128,7 @@ export default Vue.extend({
     flex-direction: row;
     background-color: var(--blackbg);
     flex-wrap: wrap;
+    justify-content: center;
   }
 }
 </style>

@@ -1,27 +1,44 @@
 import axios from 'axios'
 import * as cheerio from 'cheerio'
 import { WebsiteLoader, NovelResponse, WebsiteStyle } from '../Website'
-import { Novel, Chapter, Comment } from '../Database'
+import { Novel, Chapter, Comment, db } from '../Database'
 import Novels from '../Novels'
 import Chapters from '../Chapters'
 import slugify from 'slugify'
 
-export default class Ehmed implements WebsiteLoader {
-  public get name (): string { return 'Ehmed' }
-  public get slug (): string { return 'ehmed' }
-  public get url (): string { return 'https://www.ehmed.xyz' }
-  public get icon (): string { return 'https://www.ehmed.xyz/wp-content/uploads/2018/06/cropped-guy-anime-clipart-12-270x270.jpg' }
-  public style: WebsiteStyle = {}
+export default class SnowyCodex implements WebsiteLoader {
+  public get name (): string { return 'Snowy Codex' }
+  public get slug (): string { return 'snowycodex' }
+  public get url (): string { return 'http://snowycodex.com' }
+  public get icon (): string { return 'https://i2.wp.com/snowycodex.com/wp-content/uploads/2017/02/Logo.png' }
+  public style: WebsiteStyle = {
+    name: { color: '#630000', backgroundColor: '#ffeedd' },
+    header: { color: '#630000', backgroundColor: '#ffeedd' },
+    iconHeader: { borderColor: '#ffeedd', backgroundColor: '#ffeedd' }
+  }
 
   public async getNovels (): Promise<Novel[]> {
-    const result = await axios.get(this.url + '/translated/')
+    const result = await axios.get(this.url + '/translations/novels/')
     const novels = new Novels()
     if (result.status === 200) {
       const $ = cheerio.load(result.data)
-      $('.entry-content strong a').each((i, el): void => {
+      $('.entry-content h2 a').each((i, el): void => {
         const url = ($(el).attr('href').match(this.url) !== null) ? $(el).attr('href') : this.url + $(el).attr('href')
+        const description = $.html($(el).parent().next().nextUntil('hr,div'))
         const title = $(el).text()
-        novels.add(title, this.slug, url)
+        if (title !== '*') {
+          const slug = novels.add(title, this.slug, url, description)
+          axios.get(url).then(result => {
+            if (result.status === 200) {
+              const $ = cheerio.load(result.data)
+              db.novels.get({ slug }).then(novel => {
+                if (novel !== undefined && novel.id) {
+                  db.novels.update(novel.id, { cover: $('.entry-content img').first().attr('src')})
+                }
+              })
+            }
+          })
+        }
       })
     }
     return novels.get()
@@ -33,18 +50,13 @@ export default class Ehmed implements WebsiteLoader {
     const chapters = new Chapters()
     if (result.status === 200) {
       const $ = cheerio.load(result.data)
-      novel.description = $.html($($('.entry-content')
-        .find('h2,h3')
-        .toArray()
-        .find((el: CheerioElement): boolean => $(el).text().match(/synopsis/i) !== null))
-        .next()
-        .nextUntil('hr'))
+      novel.cover = $('.entry-content img').first().attr('src')
       novel.lastUpdate = new Date()
 
-      $('.entry-content strong a').each((i, el): void => {
-        const url = ($(el).attr('href').match(this.url) !== null) ? $(el).attr('href') : this.url + $(el).attr('href')
-        const title = $(el).text()
-        chapters.add(title, novel.id!, url)
+      $('.entry-content a').each((i, el): void => {
+        if ($(el).attr('href').match(novel.url) !== null) {
+          chapters.add($(el).text(), novel.id!, $(el).attr('href'), '')
+        }
       })
     }
     return { novel, chapters: chapters.get() }
@@ -59,7 +71,6 @@ export default class Ehmed implements WebsiteLoader {
       if (contentHTML !== null) {
         content = contentHTML
       }
-
       if (chapter.title === '') {
         chapter.title = $('.entry-title').text()
         chapter.slug = slugify(chapter.title)

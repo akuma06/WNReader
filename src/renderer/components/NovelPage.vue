@@ -1,10 +1,10 @@
 <template>
-  <div class="novel" v-if="novel !== null">
-    <div class="novel-header">
-      <router-link :to="{ name: 'website-page', params: { website: novel.website }}" class="back">
+  <div class="novel" v-if="novel !== null" @scroll="handleScroll">
+    <div class="novel-header" ref="novelHeader" :style="websiteModel.website.style.header">
+      <router-link :to="{ name: 'website-page', params: { website: novel.website }}" :style="websiteModel.website.style.header" class="back">
         <font-awesome-icon icon="arrow-left" size="lg" />
       </router-link>
-      <img :src="novel.cover" :alt="novel.title" />
+      <img :src="novel.cover" :alt="novel.title" :style="websiteModel.website.style.iconHeader" />
       <h1>{{novel.title}}</h1>
     </div>
     <div class="synopsis" v-html="novel.description">
@@ -52,6 +52,16 @@ export default Vue.extend({
   methods: {
     onSelected (chapter: Chapter) {
       if (chapter !== null && chapter.id !== undefined && this.websiteModel !== null) { this.$router.push({ name: 'reader-page', params: { novel: chapter.novel.toString(), chapter: chapter.id.toString(), website: this.websiteModel.website.slug } }) }
+    },
+    handleScroll (e: UIEvent) {
+      const novelHeader = this.$refs['novelHeader'] as HTMLDivElement
+      if (novelHeader) {
+        const cover = novelHeader.querySelector('img') as HTMLImageElement
+        const container = e.target as HTMLDivElement
+        if (cover && container) {
+          cover.classList.toggle('sticky', container.scrollTop > 100)
+        }
+      }
     }
   },
   created () {
@@ -78,6 +88,9 @@ export default Vue.extend({
     margin-top: 120px;
     background: white;
     height: 45px;
+    position: sticky;
+    top: 0px;
+    z-index: 3;
     .back {
       color: black;
       margin: 0 15px;
@@ -91,6 +104,14 @@ export default Vue.extend({
       border: 5px solid white;
       position: relative;
       top: -115px;
+      transition: height .2s, top .2s, width .2s, border-width .2s, border-radius .2s;
+      &.sticky {
+        height: 45px;
+        border-radius: 2em;
+        top: 0px;
+        width: 45px;
+        border-width: 0;
+      }
     }
     h1 {
       padding: 5px;
