@@ -111,7 +111,7 @@ export default Vue.extend({
       }
     },
     nextChapter () {
-      if (this.websiteModel !== null && this.chapter !== null) {
+      if (this.websiteModel !== null && this.chapter !== null && this.chapter.next !== '') {
         this.loading = true
         this.websiteModel.nextChapter(this.chapter)
           .then(chapterResponse => {
@@ -122,7 +122,7 @@ export default Vue.extend({
       }
     },
     prevChapter () {
-      if (this.websiteModel !== null && this.chapter !== null) {
+      if (this.websiteModel !== null && this.chapter !== null && this.chapter.prev !== '') {
         this.loading = true
         this.websiteModel.prevChapter(this.chapter)
           .then(chapterResponse => {
@@ -136,12 +136,12 @@ export default Vue.extend({
       if (this.websiteModel !== null && this.chapter !== null) {
         switch (e.which) {
           case 38:
-            if (!this.loading) {
+            if (!this.loading && this.chapter.prev !== '') {
               this.hidedown(e)
             }
             break
           case 40:
-            if (!this.loading) {
+            if (!this.loading && this.chapter.next !== '') {
               this.hideup(e)
             }
             break
@@ -178,16 +178,16 @@ export default Vue.extend({
       }
     },
     handleWheel (e: MouseWheelEvent) {
-      if (this.loading) {
+      if (this.loading || this.chapter === null) {
         return
       }
       if (timeoutAnim !== null) {
         clearTimeout(timeoutAnim)
       }
-      if (e.wheelDelta > 0) {
+      if (e.wheelDelta > 0 && this.chapter.prev !== '') {
         this.hidedown()
         timeoutAnim = setTimeout(() => this.hidedown(undefined, true), 200)
-      } else if (e.wheelDelta < 0) {
+      } else if (e.wheelDelta < 0 && this.chapter.next !== '') {
         this.hideup()
         timeoutAnim = setTimeout(() => this.hideup(undefined, true), 200)
       }
