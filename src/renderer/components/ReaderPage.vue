@@ -25,7 +25,7 @@
             </a>
           </li>
           <li>
-            <a href="#" @click.prevent="handleFullscreen" title="Fullscreen">
+            <a href="#" @click.prevent="handleFullscreen()" title="Fullscreen">
               <font-awesome-icon icon="external-link-alt" />
             </a>
           </li>
@@ -228,10 +228,8 @@ export default Vue.extend({
       }
     },
     handleFullscreen (fs?: boolean) {
-      if (fs === undefined) {
-        fs = !this.$electron.remote.getCurrentWindow().isFullScreen()
-      }
-      this.$electron.remote.getCurrentWindow().setFullScreen(fs)
+      const isFullscreen = (fs === undefined) ? !this.$electron.remote.getCurrentWindow().isFullScreen() : fs
+      this.$electron.remote.getCurrentWindow().setFullScreen(isFullscreen)
       this.fadeInHeader()
     },
     handleOverHeader () {
