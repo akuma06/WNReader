@@ -228,8 +228,11 @@ export default Vue.extend({
       }
     },
     handleFullscreen (fs?: boolean) {
-      const isFullscreen = (fs === undefined) ? !this.$electron.remote.getCurrentWindow().isFullScreen() : fs
-      this.$electron.remote.getCurrentWindow().setFullScreen(isFullscreen)
+      if (fs === undefined) {
+        this.$electron.remote.getCurrentWindow().setFullScreen(!this.$electron.remote.getCurrentWindow().isFullScreen())
+      } else if (fs !== this.$electron.remote.getCurrentWindow().isFullScreen()) {
+        this.$electron.remote.getCurrentWindow().setFullScreen(fs)
+      }
       this.fadeInHeader()
     },
     handleOverHeader () {
