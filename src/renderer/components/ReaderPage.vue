@@ -416,16 +416,16 @@ export default Vue.extend({
     color: black;
     font-family: 'Nunito Sans','SF Pro Text','SF Pro Icons',Roboto,'Helvetica Neue',Helvetica,Arial,sans-serif;
     transition: opacity 1s;
+    &.show {
+      opacity: 1;
+      animation: fadeIn .2s ease;
+    }
+    &.hide {
+      opacity: 0;
+      animation: fadeOut .2s ease;
+    }
     .left {
       display: flex;
-      &.show {
-        opacity: 1;
-        animation: fadeIn .2s ease;
-      }
-      &.hide {
-        opacity: 0;
-        animation: fadeOut .2s ease;
-      }
       img {
         height: 25px;
         width: 25px;
