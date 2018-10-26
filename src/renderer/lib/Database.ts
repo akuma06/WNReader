@@ -14,6 +14,11 @@ export type Chapter = {
   lastUpdate: Date
 }
 
+export enum Bookmarked {
+  No = 0,
+  Yes
+}
+
 export type Novel = {
   id?: number
   website: string
@@ -22,7 +27,7 @@ export type Novel = {
   url: string
   cover: string
   slug: string
-  bookmarked: boolean
+  bookmarked: number
   lastRead?: Chapter
   lastUpdate: Date
 }

@@ -11,19 +11,24 @@ export default new Router({
       component: require('@/components/DashboardPage').default
     },
     {
-      path: '/website',
+      path: '/website/:website',
       name: 'website-page',
       component: require('@/components/WebsitePage').default
     },
     {
-      path: '/novel',
+      path: '/novel/:website/:novel',
       name: 'novel-page',
       component: require('@/components/NovelPage').default
     },
     {
-      path: '/reader',
+      path: '/reader/:website/:novel/:chapter',
       name: 'reader-page',
       component: require('@/components/ReaderPage').default
+    },
+    {
+      path: '/settings',
+      name: 'settings-page',
+      component: require('@/components/SettingsPage').default
     },
     {
       path: '*',

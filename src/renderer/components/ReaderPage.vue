@@ -1,10 +1,22 @@
 <template>
   <div v-if="chapter !== null" class="reader">
     <div class="header" :class="{ show: showHeader, hide: !showHeader }" ref="readerHeader" @mouseover="handleOverHeader" @mouseout="enableFade = true">
-      <router-link :to="{ name: 'novel-page', params: { novel: novel.id.toString(), website: websiteModel.website.slug }}">
-        <img src="@/assets/logo.png" />
-      </router-link>
-      <h1>{{ chapter.title }}</h1>
+      <div class="left">
+        <router-link :to="{ name: 'novel-page', params: { novel: novel.id.toString(), website: websiteModel.website.slug }}">
+          <img src="@/assets/logo.png" />
+        </router-link>
+        <h1>{{ chapter.title }}</h1>
+      </div>
+      <div class="tools">
+        <a
+          href="#"
+          @click.prevent="handleBookmark"
+          title="Ajouter aux favoris"
+          :class="{ enabled: (novel.bookmarked === Bookmarked.Yes) }"
+        >
+          <font-awesome-icon icon="bookmark" />
+        </a>
+      </div>
     </div>
     <div class="main" ref="readerContent" @scroll="handleScroll" @mousewheel="handleWheel">
       <div class="content">
@@ -26,7 +38,13 @@
           </li>
           <li>
             <a href="#" @click.prevent="handleFullscreen()" title="Fullscreen">
-              <font-awesome-icon icon="external-link-alt" />
+              <font-awesome-icon icon="expand" />
+            </a>
+          </li>
+          <li class="separator"></li>
+          <li>
+            <a href="#" @click.prevent="handleSettings" title="Paramètres">
+              <font-awesome-icon icon="cog" />
             </a>
           </li>
         </ul>
@@ -50,7 +68,7 @@
 
 <script lang="ts">
 import Vue from 'vue'
-import { Chapter, Novel, db, Comment } from '../lib/Database'
+import { Chapter, Novel, db, Comment, Bookmarked } from '../lib/Database'
 import Website from '../lib/Website'
 import websites from '../lib/websites'
 import CommentVue from './ReaderPage/Comment.vue'
@@ -72,6 +90,7 @@ type ReaderPageData = {
   showHeader: boolean
   loading: boolean
   Panels: typeof Panels
+  Bookmarked: typeof Bookmarked
 }
 
 let timeoutAnim: NodeJS.Timer | null = null
@@ -94,7 +113,8 @@ export default Vue.extend({
       enableFade: true,
       showHeader: true,
       loading: true,
-      Panels: Panels
+      Panels,
+      Bookmarked
     }
   },
   methods: {
@@ -129,6 +149,17 @@ export default Vue.extend({
             this.chapter = chapterResponse.chapter
             this.checkPosition()
             this.loading = false
+          })
+      }
+    },
+    handleBookmark () {
+      if (this.novel && this.novel.id) {
+        const isBookmarked = (this.novel.bookmarked === Bookmarked.Yes) ? Bookmarked.No : Bookmarked.Yes
+        db.novels.update(this.novel.id, { bookmarked: isBookmarked })
+          .then(_ => {
+            if (this.novel) {
+              this.novel.bookmarked = isBookmarked
+            }
           })
       }
     },
@@ -226,6 +257,9 @@ export default Vue.extend({
           }
         }
       }
+    },
+    handleSettings () {
+      this.$router.push({ name: 'settings-page' })
     },
     handleFullscreen (fs?: boolean) {
       if (fs === undefined) {
@@ -372,6 +406,7 @@ export default Vue.extend({
     width: 100%;
     display: flex;
     flex-direction: row;
+    justify-content: space-between;
     padding: 5px;
     position: fixed;
     top: 0px;
@@ -381,25 +416,46 @@ export default Vue.extend({
     color: black;
     font-family: 'Nunito Sans','SF Pro Text','SF Pro Icons',Roboto,'Helvetica Neue',Helvetica,Arial,sans-serif;
     transition: opacity 1s;
-    &.show {
-      opacity: 1;
-      animation: fadeIn .2s ease;
+    .left {
+      display: flex;
+      &.show {
+        opacity: 1;
+        animation: fadeIn .2s ease;
+      }
+      &.hide {
+        opacity: 0;
+        animation: fadeOut .2s ease;
+      }
+      img {
+        height: 25px;
+        width: 25px;
+        margin: 0 10px;
+      }
+      h1 {
+        font-size: 18px;
+        font-weight: bold;
+        line-height: 25px;
+        padding: 0;
+        margin: 0;
+      }
     }
-    &.hide {
-      opacity: 0;
-      animation: fadeOut .2s ease;
-    }
-    img {
-      height: 25px;
-      width: 25px;
-      margin: 0 10px;
-    }
-    h1 {
-      font-size: 18px;
-      font-weight: bold;
-      line-height: 25px;
-      padding: 0;
-      margin: 0;
+    .tools {
+      display: flex;
+      align-content: flex-end;
+      align-self: center;
+      padding-right: 2em;
+      a {
+        color: var(--biolet);
+        border: 1px solid var(--biolet);
+        transition: border .2s, color .2s, background-color .2s;
+        padding: 4px;
+        border-radius: 5px;
+        &.enabled {
+          color: white;
+          background-color: var(--biolet);
+          border: 0;
+        }
+      }
     }
   }
   .main {
@@ -445,8 +501,6 @@ export default Vue.extend({
         li {
           color: white;
           padding: 5px;
-          border-bottom: 1px solid grey;
-          border-top: 1px solid grey;
           transition: background-color .2s linear;
           cursor: pointer;
           svg {
@@ -455,6 +509,9 @@ export default Vue.extend({
           }
           &:hover {
             background-color: rgb(61, 61, 61)
+          }
+          &.separator {
+            border-bottom: 1px solid grey;
           }
         }
       }

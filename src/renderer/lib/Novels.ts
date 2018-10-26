@@ -1,4 +1,4 @@
-import { Novel } from './Database'
+import { Novel, Bookmarked } from './Database'
 import slugify from 'slugify'
 
 export default class Novels {
@@ -24,7 +24,7 @@ export default class Novels {
         url,
         description,
         cover,
-        bookmarked: false,
+        bookmarked: Bookmarked.No,
         lastUpdate: new Date()
       }
       this.novels.set(novel.slug, novel)
