@@ -39,7 +39,6 @@ export default class GravityTales implements WebsiteLoader {
         .next()
         .nextAll())
       novel.cover = $('#coverImg').first().css('background-image').replace(/^url\("*([a-z0-9/:\-.]+)(?:\?[a-z=0-9]+)*"*\)$/i, '$1')
-      console.log(novel.cover)
       novel.lastUpdate = new Date()
       const chaptersResult = await axios.get(`${novel.url}/chapters`)
       if (chaptersResult.status === 200) {
