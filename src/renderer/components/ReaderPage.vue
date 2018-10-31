@@ -19,10 +19,10 @@
       </div>
     </div>
     <div class="main" ref="readerContent" @scroll="handleScroll" @mousewheel="handleWheel">
-      <div class="content">
+      <div class="content" ref="content">
         <h1 class="chapter-title" v-if="!this.loading">{{ chapter.title }}</h1>
-        <div class="chapter-content" v-if="!this.loading" v-html="chapter.content" @click.prevent="handleContentClick"></div>
-        <div class="chapter-content" v-if="this.loading">Loading...</div>
+        <div class="chapter-content" v-show="!this.loading" v-html="chapter.content" @click.prevent="handleContentClick"></div>
+        <div class="chapter-content" v-show="this.loading">Loading...</div>
       </div>
       <div class="side">
         <ul>
@@ -63,6 +63,9 @@
         <span>{{ c.title }}</span>
       </a>
     </div>
+    <div ref="search" class="search-container" v-show="enableSearch">
+      <search-vue :container="$refs['content']" @close="enableSearch = false" :shown="enableSearch" />
+    </div>
   </div>
 </template>
 
@@ -72,6 +75,7 @@ import { Chapter, Novel, db, Comment, Bookmarked } from '../lib/Database'
 import Website from '../lib/Website'
 import websites from '../lib/websites'
 import CommentVue from './ReaderPage/Comment.vue'
+import SearchVue from './ReaderPage/Search.vue'
 
 enum Panels {
   None = 1,
@@ -88,6 +92,7 @@ type ReaderPageData = {
   showPanel: Panels
   enableFade: boolean
   showHeader: boolean
+  enableSearch: boolean
   loading: boolean
   Panels: typeof Panels
   Bookmarked: typeof Bookmarked
@@ -99,7 +104,8 @@ let timeoutFade: NodeJS.Timer | null = null
 export default Vue.extend({
   name: 'ReaderPage',
   components: {
-    CommentVue
+    CommentVue,
+    SearchVue
   },
   data (): ReaderPageData {
     const websiteLoader = websites[this.$route.params.website]
@@ -113,6 +119,7 @@ export default Vue.extend({
       enableFade: true,
       showHeader: true,
       loading: true,
+      enableSearch: false,
       Panels,
       Bookmarked
     }
@@ -181,23 +188,28 @@ export default Vue.extend({
     },
     handleKeyUp (e: KeyboardEvent) {
       if (this.websiteModel !== null && this.chapter !== null) {
-        switch (e.which) {
-          case 39:
+        switch (e.code) {
+          case 'ArrowRight':
             this.nextChapter()
             break
-          case 37:
+          case 'ArrowLeft':
             this.prevChapter()
             break
-          case 13:
+          case 'KeyF':
+            if (e.ctrlKey) {
+              this.enableSearch = true
+            }
+            break
+          case 'Enter':
             this.handleFullscreen(true)
             break
-          case 27:
+          case 'Escape':
             this.handleFullscreen(false)
             break
-          case 38:
+          case 'ArrowUp':
             this.hidedown(e, true)
             break
-          case 40:
+          case 'ArrowDown':
             this.hideup(e, true)
             break
         }
@@ -226,6 +238,7 @@ export default Vue.extend({
     checkPosition () {
       const reader = this.$refs['readerContent'] as HTMLDivElement
       if (this.chapter !== null && this.chapter.lastPosition !== undefined && reader) {
+        console.log(this.chapter.lastPosition)
         reader.scrollTop = this.chapter.lastPosition
       } else if (reader) {
         reader.scrollTop = 0
@@ -238,6 +251,7 @@ export default Vue.extend({
         if (reader.scrollHeight <= (reader.scrollTop + 1.3 * reader.offsetHeight) || reader.scrollTop <= 0.3 * reader.offsetHeight) {
           lastPosition = undefined
         } else lastPosition = reader.scrollTop
+        console.log('lastPosition: %d', lastPosition)
         db.chapters.update(this.chapter.id, { lastPosition })
         db.novels.update(this.novel.id, { lastRead: this.chapter })
       }
@@ -343,6 +357,7 @@ export default Vue.extend({
   watch: {
     chapter (newChapter: Chapter | null, oldChapter: Chapter | null) {
       if (newChapter !== null && this.novel && this.websiteModel !== null) {
+        this.enableSearch = false
         this.websiteModel.loadComments(this.novel, newChapter).then(comments => {
           this.comments = comments
         })
@@ -356,10 +371,11 @@ export default Vue.extend({
         this.novel = chapterResponse.novel
         this.chapter = chapterResponse.chapter
         this.chapters = chapterResponse.chapters
+        this.loading = false
+        return this.$nextTick()
+      }).then(_ => {
         this.checkPosition()
         this.fadeInHeader()
-        this.loading = false
-        return chapterResponse
       })
       document.addEventListener('keyup', this.handleKeyUp)
       document.addEventListener('keydown', this.handleKeyDown)
@@ -562,6 +578,17 @@ export default Vue.extend({
         }
       }
     }
+  }
+  .search-container {
+    position: absolute;
+    top: -1px;
+    right: 125px;
+    z-index: 4;
+    padding: 5px 10px;
+    background: lightgray;
+    border: 1px solid var(--biolet);
+    border-bottom-left-radius: 10px;
+    border-bottom-right-radius: 10px;
   }
 }
 </style>

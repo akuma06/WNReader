@@ -11,6 +11,14 @@
       <div class="tools">
         <a
           href="#"
+          @click.prevent="handleContinue"
+          title="Reprendre la lecture"
+          v-show="novel.lastRead"
+        >
+          <font-awesome-icon icon="book-reader" />&nbsp;Reprendre
+        </a>
+        <a
+          href="#"
           @click.prevent="handleBookmark"
           title="Ajouter aux favoris"
           :class="{ enabled: (novel.bookmarked === Bookmarked.Yes) }"
@@ -76,6 +84,11 @@ export default Vue.extend({
               this.novel.bookmarked = isBookmarked
             }
           })
+      }
+    },
+    handleContinue () {
+      if (this.novel && this.novel.lastRead && this.novel.lastRead.id && this.novel.id) {
+        this.$router.push({ name: 'reader-page', params: { website: this.novel.website, novel: this.novel.id.toString(), chapter: this.novel.lastRead.id.toString() } })
       }
     },
     handleScroll (e: UIEvent) {
@@ -159,6 +172,7 @@ export default Vue.extend({
         border: 1px solid var(--biolet);
         transition: border .2s, color .2s, background-color .2s;
         padding: 4px;
+        margin-left: 4px;
         border-radius: 5px;
         &.enabled {
           color: white;
