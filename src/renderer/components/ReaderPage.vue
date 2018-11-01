@@ -358,6 +358,18 @@ export default Vue.extend({
     chapter (newChapter: Chapter | null, oldChapter: Chapter | null) {
       if (newChapter !== null && this.novel && this.websiteModel !== null) {
         this.enableSearch = false
+        const chapterContent = this.$refs['content'] as HTMLDivElement
+        if (chapterContent !== undefined) {
+          let shell = require('electron').shell
+          Array.from(chapterContent.querySelectorAll('a')).forEach(el => {
+            el.addEventListener('click', function (event) {
+              if (event.target && (event.target as Element).tagName === 'A' && (event.target as HTMLLinkElement).href.startsWith('http')) {
+                event.preventDefault()
+                shell.openExternal((event.target as HTMLLinkElement).href)
+              }
+            })
+          })
+        }
         this.websiteModel.loadComments(this.novel, newChapter).then(comments => {
           this.comments = comments
         })
@@ -381,13 +393,6 @@ export default Vue.extend({
       document.addEventListener('keydown', this.handleKeyDown)
       document.addEventListener('mousemove', this.fadeInHeader)
       document.addEventListener('touchstart', this.fadeInHeader)
-      let shell = require('electron').shell
-      document.addEventListener('click', function (event) {
-        if (event.target && (event.target as Element).tagName === 'A' && (event.target as HTMLLinkElement).href.startsWith('http')) {
-          event.preventDefault()
-          shell.openExternal((event.target as HTMLLinkElement).href)
-        }
-      })
     }
   }
 })

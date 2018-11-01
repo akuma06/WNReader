@@ -4,6 +4,9 @@ import { WebsiteLoader, NovelResponse, WebsiteStyle } from '../Website'
 import { Novel, Chapter, Comment } from '../Database'
 import Novels from '../Novels'
 import Chapters from '../Chapters'
+import { remote } from 'electron';
+
+axios.defaults.withCredentials = true
 
 export default class YinTranslation implements WebsiteLoader {
   public get name (): string { return 'Yin Translation' }
@@ -15,6 +18,7 @@ export default class YinTranslation implements WebsiteLoader {
   }
 
   public async getNovels (): Promise<Novel[]> {
+    this.prepareCookie()
     const result = await axios.get(`${this.url}/web-novel-translations/`)
     const novels = new Novels()
     if (result.status === 200) {
@@ -29,8 +33,9 @@ export default class YinTranslation implements WebsiteLoader {
   }
 
   public async getNovel (novel: Novel): Promise<NovelResponse> {
+    this.prepareCookie()
     console.assert(novel.id !== undefined, 'Novel id is not defined')
-    const result = await axios.get(novel.url)
+    const result = await axios.get(novel.url, { headers: { Cookie: 'Mcontent=True;' } })
     const chapters = new Chapters()
     if (result.status === 200) {
       const $ = cheerio.load(result.data)
@@ -47,7 +52,8 @@ export default class YinTranslation implements WebsiteLoader {
   }
 
   public async getChapter (novel: Novel, chapter: Chapter): Promise<Chapter> {
-    const result = await axios.get(chapter.url)
+    this.prepareCookie()
+    const result = await axios.get(chapter.url, { withCredentials: true })
     let content = ''
     if (result.status === 200) {
       const $ = cheerio.load(result.data)
@@ -72,5 +78,17 @@ export default class YinTranslation implements WebsiteLoader {
 
   public async getComments (novel: Novel, chapter: Chapter): Promise<Comment[]> {
     return []
+  }
+
+  private prepareCookie() {
+    const session = remote.session
+    const cookie: Electron.Details = {url: 'https://yintranslations.com', name: 'Mcontent', value: 'True', domain: 'yintranslations.com'}
+    if (session.defaultSession) {
+      session.defaultSession.cookies.set(cookie, (error) => {
+        if (error) console.error(error)
+      })
+    } else {
+      console.error(`Can't set a cookie for mature content on yintranslation`)
+    }
   }
 }
