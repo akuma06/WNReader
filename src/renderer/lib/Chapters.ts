@@ -50,4 +50,9 @@ export default class Chapters {
     get (): Chapter[] {
       return this.chapters
     }
+    
+    public get length() : number {
+      return this.chapters.length
+    }
+    
 }

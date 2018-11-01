@@ -381,6 +381,13 @@ export default Vue.extend({
       document.addEventListener('keydown', this.handleKeyDown)
       document.addEventListener('mousemove', this.fadeInHeader)
       document.addEventListener('touchstart', this.fadeInHeader)
+      let shell = require('electron').shell
+      document.addEventListener('click', function (event) {
+        if (event.target && (event.target as Element).tagName === 'A' && (event.target as HTMLLinkElement).href.startsWith('http')) {
+          event.preventDefault()
+          shell.openExternal((event.target as HTMLLinkElement).href)
+        }
+      })
     }
   }
 })
@@ -491,6 +498,9 @@ export default Vue.extend({
       background-color: white;
       .chapter-content {
         font-size: 24px;
+        /deep/ a {
+          color: var(--biolet);
+        }
       }
       h1.chapter-title {
         border-bottom: 1px solid black;
