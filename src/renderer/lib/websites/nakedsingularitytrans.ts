@@ -5,7 +5,7 @@ import { Novel, Chapter, Comment, db } from '../Database'
 import Novels from '../Novels'
 import Chapters from '../Chapters'
 import slugify from 'slugify'
-import { getFeedEntries } from '../helpers/Wordpress';
+import { getFeedEntries } from '../helpers/Wordpress'
 
 /**
  * It seems we can't detect the novels easily on the website, better to do an array

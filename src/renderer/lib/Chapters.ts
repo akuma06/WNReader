@@ -5,9 +5,9 @@ export default class Chapters {
     private index: Map<string, number> = new Map()
     private chapters: Chapter[] = []
 
-    constructor (chapters?: Chapter[]) {
+    public constructor (chapters?: Chapter[]) {
       if (chapters !== undefined) {
-        chapters.forEach(chapter => {
+        chapters.forEach((chapter: Chapter): void => {
           if (chapter.slug === '') {
             chapter.slug = slugify(chapter.title)
           }
@@ -47,7 +47,7 @@ export default class Chapters {
       return false
     }
 
-    get (): Chapter[] {
+    public get (): Chapter[] {
       return this.chapters
     }
 

@@ -33,7 +33,7 @@ export default class SnowyCodex implements WebsiteLoader {
               const $ = cheerio.load(result.data)
               db.novels.get({ slug }).then(novel => {
                 if (novel !== undefined && novel.id) {
-                  db.novels.update(novel.id, { cover: $('.entry-content img').first().attr('src')})
+                  db.novels.update(novel.id, { cover: $('.entry-content img').first().attr('src') })
                 }
               })
             }

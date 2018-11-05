@@ -51,21 +51,21 @@ class NovelDB extends Dexie {
       websites: '++id,slug',
       novels: '++id,website,title,url,slug,bookmarked,lastUpdate,[title+website]',
       chapters: '++id,novel,title,url,slug,lastUpdate,[title+novel]'
-    }).upgrade(async (trans: any) => {
-      await (trans.novels as Dexie.Table<Novel, number>).toCollection().modify(novel => {
+    }).upgrade(async (trans: any): Promise<void> => {
+      await (trans.novels as Dexie.Table<Novel, number>).toCollection().modify((novel: Novel): void => {
         if (novel.slug === '') {
           novel.slug = slugify(novel.title)
         }
       })
       const chapters = await (trans.chapters as Dexie.Table<Chapter, number>).toArray()
-      await Promise.all(chapters.map(chapter => Promise.resolve()
-        .then(() => {
+      await Promise.all(chapters.map((chapter: Chapter): Promise<Chapter | undefined> => Promise.resolve()
+        .then((): Dexie.Promise<Chapter | undefined> | undefined => {
           if (chapter.next !== undefined) {
-            return (trans.chapters as Dexie.Table<Chapter, number>).get({title: chapter.next })
+            return (trans.chapters as Dexie.Table<Chapter, number>).get({ title: chapter.next })
           }
           return undefined
         })
-        .then(nextChapter => {
+        .then((nextChapter): Dexie.Promise<number> => {
           const slug = (chapter.slug !== '') ? chapter.slug : slugify(chapter.title)
           const toUpdate: Chapter[] = []
           if (nextChapter !== undefined) {
@@ -77,7 +77,7 @@ class NovelDB extends Dexie {
           toUpdate.push(chapter)
           return (trans.chapters as Dexie.Table<Chapter, number>).bulkPut(toUpdate)
         })
-        .then(_ => (trans.chapters as Dexie.Table<Chapter, number>).get(chapter.id!))
+        .then((_): Dexie.Promise<Chapter | undefined> => (trans.chapters as Dexie.Table<Chapter, number>).get(chapter.id!))
       ))
     })
     this.version(3).stores({

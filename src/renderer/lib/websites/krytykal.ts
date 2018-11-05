@@ -64,7 +64,7 @@ export default class Krytykal implements WebsiteLoader {
       novel.cover = $('.entry-content img').first().attr('src')
       novel.lastUpdate = new Date()
       $('.entry-content h3').each((i, el) => {
-        const titlePrefix = (($(el).text().match(/part/i) !== null) ? $(el).prevAll('h2').first().text() : $(el).text()).replace(/[\[\(][\w ]+[\]\)]/ig, '').replace(/\s+$/g, '')
+        const titlePrefix = (($(el).text().match(/part/i) !== null) ? $(el).prevAll('h2').first().text() : $(el).text()).replace(/[[(][\w ]+[\])]/ig, '').replace(/\s+$/g, '')
         $(el).nextUntil('h3').filter('ul').find('li').each((_, c) => {
           const url = $(c).find('a').first().attr('href')
           const title = `${titlePrefix} - ${$(c).text()}`

@@ -4,7 +4,7 @@ import slugify from 'slugify'
 export default class Novels {
     private novels: Map<string, Novel> = new Map()
 
-    constructor (novels?: Novel[]) {
+    public constructor (novels?: Novel[]) {
       if (novels !== undefined) {
         novels.forEach(novel => {
           if (novel.slug === '') {
@@ -35,7 +35,7 @@ export default class Novels {
       return this.novels.delete(slug)
     }
 
-    get (): Novel[] {
+    public get (): Novel[] {
       const novels: Novel[] = []
       this.novels.forEach(novel => novels.push(novel))
       return novels

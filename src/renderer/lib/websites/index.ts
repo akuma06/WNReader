@@ -5,7 +5,8 @@ import GravityTales from './gravitytales'
 import SnowyCodex from './snowycodex'
 import YinTranslation from './yintranslation'
 import Krytykal from './krytykal'
-import NakedSingularity from './nakedsingularitytrans';
+import NakedSingularity from './nakedsingularitytrans'
+import Pumlated from './pumlated'
 
 const websites: {
 [websiteID: string]: WebsiteLoader
@@ -16,6 +17,7 @@ const websites: {
   [new YinTranslation().slug]: new YinTranslation(),
   [new Krytykal().slug]: new Krytykal(),
   [new NakedSingularity().slug]: new NakedSingularity(),
+  [new Pumlated().slug]: new Pumlated(),
   [new SnowyCodex().slug]: new SnowyCodex()
 }
 

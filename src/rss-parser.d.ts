@@ -1,3 +1,4 @@
+/* eslint-disable */
 declare module 'rss-parser' {
   import { Options } from 'xml2js';
   
@@ -47,7 +48,7 @@ declare module 'rss-parser' {
     * @param options Parser options;
     * @returns Parser;
     */
-    constructor(options?: ParserOptions);
+    //constructor(options?: ParserOptions);
     
     /**
     * Parse XML content to JSON.

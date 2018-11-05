@@ -238,7 +238,6 @@ export default Vue.extend({
     checkPosition () {
       const reader = this.$refs['readerContent'] as HTMLDivElement
       if (this.chapter !== null && this.chapter.lastPosition !== undefined && reader) {
-        console.log(this.chapter.lastPosition)
         reader.scrollTop = this.chapter.lastPosition
       } else if (reader) {
         reader.scrollTop = 0
@@ -251,7 +250,6 @@ export default Vue.extend({
         if (reader.scrollHeight <= (reader.scrollTop + 1.3 * reader.offsetHeight) || reader.scrollTop <= 0.3 * reader.offsetHeight) {
           lastPosition = undefined
         } else lastPosition = reader.scrollTop
-        console.log('lastPosition: %d', lastPosition)
         db.chapters.update(this.chapter.id, { lastPosition })
         db.novels.update(this.novel.id, { lastRead: this.chapter })
       }
@@ -505,6 +503,12 @@ export default Vue.extend({
         font-size: 24px;
         /deep/ a {
           color: var(--biolet);
+        }
+        /deep/ img {
+          display: block;
+          margin: 10px 3px;
+          width: 100%;
+          height: auto;
         }
       }
       h1.chapter-title {

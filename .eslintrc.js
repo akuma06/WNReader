@@ -29,7 +29,7 @@ module.exports = {
     'no-useless-constructor': 'warn',
     'space-infix-ops': 'warn', // https://github.com/nzakas/eslint-plugin-typescript/issues/85
     'typescript/adjacent-overload-signatures': 'error',
-    'typescript/explicit-function-return-type': 'error',
+    'typescript/explicit-function-return-type': 'off',
     'typescript/explicit-member-accessibility': 'error',
     'typescript/member-delimiter-style': ['error', { delimiter: 'none' }],
     'typescript/no-angle-bracket-type-assertion': 'error',
