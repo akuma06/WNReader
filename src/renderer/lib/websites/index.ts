@@ -4,6 +4,7 @@ import { WebsiteLoader } from '../Website'
 import GravityTales from './gravitytales'
 import SnowyCodex from './snowycodex'
 import YinTranslation from './yintranslation';
+import Krytykal from './krytykal';
 
 const websites: {
 [websiteID: string]: WebsiteLoader
@@ -12,6 +13,7 @@ const websites: {
   [new GravityTales().slug]: new GravityTales(),
   [new MachineSliced().slug]: new MachineSliced(),
   [new YinTranslation().slug]: new YinTranslation(),
+  [new Krytykal().slug]: new Krytykal(),
   [new SnowyCodex().slug]: new SnowyCodex()
 }
 

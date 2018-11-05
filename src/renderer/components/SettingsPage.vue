@@ -57,7 +57,7 @@ export default Vue.extend({
     eraseDatabase (e: UIEvent) {
       const btn = e.target as HTMLButtonElement
       btn.disabled = true
-      if (prompt('En nettoyant la base de données, vous perdrez toutes les données concernant vos positions de lectures et vos favoris.\nVoulez-vous continuer ?')) {
+      if (confirm('En nettoyant la base de données, vous perdrez toutes les données concernant vos positions de lectures et vos favoris.\nVoulez-vous continuer ?')) {
         const promises = [
           db.novels.clear(),
           db.chapters.clear()
