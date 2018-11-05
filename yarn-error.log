@@ -1,8 +1,8 @@
 Arguments: 
-  C:\Program Files\nodejs\node.exe C:\Program Files (x86)\Yarn\bin\yarn.js add @types/fortawesome__vue-fontawesome --dev
+  C:\Program Files\nodejs\node.exe C:\Program Files (x86)\Yarn\bin\yarn.js add --dev @types/rss-parser
 
 PATH: 
-  C:\ProgramData\Oracle\Java\javapath;C:\Users\akuma06\go\bin;C:\Program Files (x86)\Intel\iCLS Client\;C:\Program Files\Intel\iCLS Client\;C:\WINDOWS\system32;C:\WINDOWS;C:\WINDOWS\System32\Wbem;C:\WINDOWS\System32\WindowsPowerShell\v1.0\;c:\Program Files\Intel\WiFi\bin\;c:\Program Files\Common Files\Intel\WirelessCommon\;C:\Program Files (x86)\Windows Live\Shared;C:\Program Files\MiKTeX 2.9\miktex\bin\x64\;C:\Program Files\Intel\Intel(R) Management Engine Components\DAL;C:\Program Files\Intel\Intel(R) Management Engine Components\IPT;C:\Program Files\Git\cmd;C:\msys64\mingw64\bin;C:\msys64\mingw32\bin;C:\Program Files\MATLAB\R2017a\runtime\win64;C:\Program Files\MATLAB\R2017a\bin;C:\Program Files\nodejs\;C:\Program Files (x86)\Windows Kits\8.1\Windows Performance Toolkit\;C:\Go\bin;C:\WINDOWS\System32\OpenSSH\;C:\Program Files (x86)\Yarn\bin\;C:\Program Files (x86)\Microsoft VS Code\bin;C:\Users\akuma06\AppData\Local\Microsoft\WindowsApps;C:\Program Files\Intel\WiFi\bin\;C:\Program Files\Common Files\Intel\WirelessCommon\;C:\Program Files (x86)\Microsoft VS Code\bin;C:\Users\akuma06\AppData\Local\GitHubDesktop\bin;C:\Users\akuma06\AppData\Local\Microsoft\WindowsApps;C:\Users\akuma06\AppData\Local\Programs\Python\Python36\Scripts;C:\Users\akuma06\AppData\Roaming\npm;C:\flutter\bin;C:\Users\akuma06\AppData\Local\Yarn\bin
+  C:\ProgramData\Oracle\Java\javapath;C:\Users\akuma06\go\bin;C:\Program Files (x86)\Intel\iCLS Client\;C:\Program Files\Intel\iCLS Client\;C:\WINDOWS\system32;C:\WINDOWS;C:\WINDOWS\System32\Wbem;C:\WINDOWS\System32\WindowsPowerShell\v1.0\;c:\Program Files\Intel\WiFi\bin\;c:\Program Files\Common Files\Intel\WirelessCommon\;C:\Program Files (x86)\Windows Live\Shared;C:\Program Files\MiKTeX 2.9\miktex\bin\x64\;C:\Program Files\Intel\Intel(R) Management Engine Components\DAL;C:\Program Files\Intel\Intel(R) Management Engine Components\IPT;C:\Program Files\Git\cmd;C:\msys64\mingw64\bin;C:\msys64\mingw32\bin;C:\Program Files\MATLAB\R2017a\runtime\win64;C:\Program Files\MATLAB\R2017a\bin;C:\Program Files\nodejs\;C:\Program Files (x86)\Windows Kits\8.1\Windows Performance Toolkit\;C:\Go\bin;C:\WINDOWS\System32\OpenSSH\;C:\Program Files (x86)\Yarn\bin\;C:\Program Files (x86)\Microsoft VS Code\bin;C:\Program Files (x86)\Plantronics\Spokes3G\;C:\Users\akuma06\AppData\Local\Microsoft\WindowsApps;C:\Program Files\Intel\WiFi\bin\;C:\Program Files\Common Files\Intel\WirelessCommon\;C:\Program Files (x86)\Microsoft VS Code\bin;C:\Users\akuma06\AppData\Local\GitHubDesktop\bin;C:\Users\akuma06\AppData\Local\Microsoft\WindowsApps;C:\Users\akuma06\AppData\Local\Programs\Python\Python36\Scripts;C:\Users\akuma06\AppData\Roaming\npm;C:\flutter\bin;C:\Users\akuma06\AppData\Local\Yarn\bin
 
 Yarn version: 
   1.9.4
@@ -14,7 +14,7 @@ Platform:
   win32 x64
 
 Trace: 
-  Error: https://registry.yarnpkg.com/@types%2ffortawesome__vue-fontawesome: Not found
+  Error: https://registry.yarnpkg.com/@types%2frss-parser: Not found
       at Request.params.callback [as _callback] (C:\Program Files (x86)\Yarn\lib\cli.js:64202:18)
       at Request.self.callback (C:\Program Files (x86)\Yarn\lib\cli.js:137468:22)
       at emitTwo (events.js:126:13)
@@ -29,7 +29,7 @@ Trace:
 npm manifest: 
   {
     "name": "wnreader",
-    "version": "0.0.1",
+    "version": "0.0.11",
     "author": "akuma06 <demon.akuma06@gmail.com>",
     "description": "A Web Novel reader application",
     "license": "MIT",
@@ -51,7 +51,7 @@ npm manifest:
       "postinstall": "npm run lint:fix"
     },
     "build": {
-      "productName": "wnreader",
+      "productName": "WebNovel Reader",
       "appId": "ml.akuma06.wnreader",
       "directories": {
         "output": "build"
@@ -88,20 +88,25 @@ npm manifest:
       "@fortawesome/fontawesome-svg-core": "^1.2.6",
       "@fortawesome/free-solid-svg-icons": "^5.4.1",
       "@fortawesome/vue-fontawesome": "^0.1.1",
+      "@types/mark.js": "^8.11.1",
       "axios": "^0.18.0",
       "cheerio": "^1.0.0-rc.2",
       "dexie": "^2.0.4",
+      "lodash": "^4.17.11",
+      "mark.js": "^8.11.1",
+      "rss-parser": "^3.5.2",
+      "slugify": "^1.3.1",
       "vue": "^2.5.17",
       "vue-axios": "^2.1.4",
-      "vue-class-component": "^6.3.0",
       "vue-content-loader": "^0.2.1",
       "vue-electron": "^1.0.6",
-      "vue-property-decorator": "^7.2.0",
+      "vue-notification": "^1.3.13",
       "vue-router": "^3.0.1",
       "vuex": "^3.0.1"
     },
     "devDependencies": {
       "@types/cheerio": "^0.22.9",
+      "@types/lodash": "^4.14.117",
       "@types/webpack-env": "^1.13.6",
       "ajv": "^6.5.0",
       "babel-core": "^6.26.3",
@@ -287,6 +292,22 @@ Lockfile:
     version "0.22.9"
     resolved "https://registry.yarnpkg.com/@types/cheerio/-/cheerio-0.22.9.tgz#b5990152604c2ada749b7f88cab3476f21f39d7b"
   
+  "@types/jquery@*":
+    version "3.3.22"
+    resolved "https://registry.yarnpkg.com/@types/jquery/-/jquery-3.3.22.tgz#cde55dc8f83207dffd16205b05f97ce824581735"
+    dependencies:
+      "@types/sizzle" "*"
+  
+  "@types/lodash@^4.14.117":
+    version "4.14.117"
+    resolved "https://registry.yarnpkg.com/@types/lodash/-/lodash-4.14.117.tgz#695a7f514182771a1e0f4345d189052ee33c8778"
+  
+  "@types/mark.js@^8.11.1":
+    version "8.11.1"
+    resolved "http://registry.npmjs.org/@types/mark.js/-/mark.js-8.11.1.tgz#a93de600b10bf0d77b74cd0ba77045f528465f8a"
+    dependencies:
+      "@types/jquery" "*"
+  
   "@types/node@*":
     version "10.11.7"
     resolved "https://registry.yarnpkg.com/@types/node/-/node-10.11.7.tgz#0e75ca9357d646ca754016ca1d68a127ad7e7300"
@@ -294,6 +315,10 @@ Lockfile:
   "@types/node@^8.0.24":
     version "8.10.36"
     resolved "https://registry.yarnpkg.com/@types/node/-/node-8.10.36.tgz#eac05d576fbcd0b4ea3c912dc58c20475c08d9e4"
+  
+  "@types/sizzle@*":
+    version "2.3.2"
+    resolved "https://registry.yarnpkg.com/@types/sizzle/-/sizzle-2.3.2.tgz#a811b8c18e2babab7d542b3365887ae2e4d9de47"
   
   "@types/webpack-env@^1.13.6":
     version "1.13.6"
@@ -5785,7 +5810,7 @@ Lockfile:
     version "4.0.1"
     resolved "https://registry.yarnpkg.com/lodash.unescape/-/lodash.unescape-4.0.1.tgz#bf2249886ce514cda112fae9218cdc065211fc9c"
   
-  lodash@^4.0.0, lodash@^4.15.0, lodash@^4.17.0, lodash@^4.17.10, lodash@^4.17.3, lodash@^4.17.4, lodash@^4.17.5, lodash@^4.2.0, lodash@^4.3.0, lodash@^4.5.0, lodash@^4.8.0, lodash@~4.17.10:
+  lodash@^4.0.0, lodash@^4.15.0, lodash@^4.17.0, lodash@^4.17.10, lodash@^4.17.11, lodash@^4.17.3, lodash@^4.17.4, lodash@^4.17.5, lodash@^4.2.0, lodash@^4.3.0, lodash@^4.5.0, lodash@^4.8.0, lodash@~4.17.10:
     version "4.17.11"
     resolved "https://registry.yarnpkg.com/lodash/-/lodash-4.17.11.tgz#b39ea6229ef607ecd89e2c8df12536891cac9b8d"
   
@@ -5928,6 +5953,10 @@ Lockfile:
     resolved "https://registry.yarnpkg.com/map-visit/-/map-visit-1.0.0.tgz#ecdca8f13144e660f1b5bd41f12f3479d98dfb8f"
     dependencies:
       object-visit "^1.0.0"
+  
+  mark.js@^8.11.1:
+    version "8.11.1"
+    resolved "https://registry.yarnpkg.com/mark.js/-/mark.js-8.11.1.tgz#180f1f9ebef8b0e638e4166ad52db879beb2ffc5"
   
   math-random@^1.0.1:
     version "1.0.1"
@@ -7629,6 +7658,13 @@ Lockfile:
       hash-base "^3.0.0"
       inherits "^2.0.1"
   
+  rss-parser@^3.5.2:
+    version "3.5.2"
+    resolved "https://registry.yarnpkg.com/rss-parser/-/rss-parser-3.5.2.tgz#fca07638d3fda43cefdb31f6f7aae5c5856a3175"
+    dependencies:
+      entities "^1.1.1"
+      xml2js "^0.4.19"
+  
   run-async@^2.2.0:
     version "2.3.0"
     resolved "https://registry.yarnpkg.com/run-async/-/run-async-2.3.0.tgz#0371ab4ae0bdd720d4166d7dfda64ff7a445a6c0"
@@ -7691,7 +7727,7 @@ Lockfile:
       pify "^3.0.0"
       semver "^5.5.0"
   
-  sax@^1.2.4:
+  sax@>=0.6.0, sax@^1.2.4:
     version "1.2.4"
     resolved "https://registry.yarnpkg.com/sax/-/sax-1.2.4.tgz#2816234e2378bddc4e5354fab5caa895df7100d9"
   
@@ -7875,6 +7911,10 @@ Lockfile:
     resolved "https://registry.yarnpkg.com/slice-ansi/-/slice-ansi-1.0.0.tgz#044f1a49d8842ff307aad6b505ed178bd950134d"
     dependencies:
       is-fullwidth-code-point "^2.0.0"
+  
+  slugify@^1.3.1:
+    version "1.3.1"
+    resolved "https://registry.yarnpkg.com/slugify/-/slugify-1.3.1.tgz#f572127e8535329fbc6c1edb74ab856b61ad7de2"
   
   smart-buffer@^1.0.4:
     version "1.1.15"
@@ -8889,10 +8929,6 @@ Lockfile:
     version "2.1.4"
     resolved "https://registry.yarnpkg.com/vue-axios/-/vue-axios-2.1.4.tgz#a9d298f7e876f9a87feb336b37adcbce34ff9f9f"
   
-  vue-class-component@^6.2.0, vue-class-component@^6.3.0:
-    version "6.3.0"
-    resolved "https://registry.yarnpkg.com/vue-class-component/-/vue-class-component-6.3.0.tgz#32c3a3302d4a047f9750a9d1f2cc56823b899294"
-  
   vue-content-loader@^0.2.1:
     version "0.2.1"
     resolved "https://registry.yarnpkg.com/vue-content-loader/-/vue-content-loader-0.2.1.tgz#0eb332e2a72643d57fb209d72d6526573b191f5a"
@@ -8927,11 +8963,9 @@ Lockfile:
       vue-hot-reload-api "^2.3.0"
       vue-style-loader "^4.1.0"
   
-  vue-property-decorator@^7.2.0:
-    version "7.2.0"
-    resolved "https://registry.yarnpkg.com/vue-property-decorator/-/vue-property-decorator-7.2.0.tgz#8e6b0f4dcc630c357135f76366ba7bd91f1db015"
-    dependencies:
-      vue-class-component "^6.2.0"
+  vue-notification@^1.3.13:
+    version "1.3.13"
+    resolved "https://registry.yarnpkg.com/vue-notification/-/vue-notification-1.3.13.tgz#e9a6d61888c8a4c91a4d3595f8e272462484016f"
   
   vue-router@^3.0.1:
     version "3.0.1"
@@ -9263,11 +9297,18 @@ Lockfile:
     version "1.0.0"
     resolved "https://registry.yarnpkg.com/xml-char-classes/-/xml-char-classes-1.0.0.tgz#64657848a20ffc5df583a42ad8a277b4512bbc4d"
   
+  xml2js@^0.4.19:
+    version "0.4.19"
+    resolved "https://registry.yarnpkg.com/xml2js/-/xml2js-0.4.19.tgz#686c20f213209e94abf0d1bcf1efaa291c7827a7"
+    dependencies:
+      sax ">=0.6.0"
+      xmlbuilder "~9.0.1"
+  
   xmlbuilder@8.2.2:
     version "8.2.2"
     resolved "http://registry.npmjs.org/xmlbuilder/-/xmlbuilder-8.2.2.tgz#69248673410b4ba42e1a6136551d2922335aa773"
   
-  xmlbuilder@^9.0.7:
+  xmlbuilder@^9.0.7, xmlbuilder@~9.0.1:
     version "9.0.7"
     resolved "http://registry.npmjs.org/xmlbuilder/-/xmlbuilder-9.0.7.tgz#132ee63d2ec5565c557e20f4c22df9aca686b10d"
   

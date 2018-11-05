@@ -3,8 +3,9 @@ import MachineSliced from './machinesliced'
 import { WebsiteLoader } from '../Website'
 import GravityTales from './gravitytales'
 import SnowyCodex from './snowycodex'
-import YinTranslation from './yintranslation';
-import Krytykal from './krytykal';
+import YinTranslation from './yintranslation'
+import Krytykal from './krytykal'
+import NakedSingularity from './nakedsingularitytrans';
 
 const websites: {
 [websiteID: string]: WebsiteLoader
@@ -14,6 +15,7 @@ const websites: {
   [new MachineSliced().slug]: new MachineSliced(),
   [new YinTranslation().slug]: new YinTranslation(),
   [new Krytykal().slug]: new Krytykal(),
+  [new NakedSingularity().slug]: new NakedSingularity(),
   [new SnowyCodex().slug]: new SnowyCodex()
 }
 

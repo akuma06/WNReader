@@ -21,36 +21,36 @@ export default class Krytykal implements WebsiteLoader {
       const $ = cheerio.load(result.data)
       const indexes: string[] = await Promise
         .all($('.nav-menu > ul > li > a')
-        .toArray()
-        .filter(el => $(el).text().match(/(?:about|teasers|others)/i) === null)
-        .map(el => Promise
-          .resolve(axios.get($(el).attr('href')))
-          .then(novelResult => {
-            if (novelResult.status === 200) {
-              const $ = cheerio.load(novelResult.data)
-              let title = ''
-              const link = novelResult.config.url || ''
-              if ($('.entry-content p:not(.wp-caption-text)').first().find('> strong').length > 0) {
-                title = $('.entry-content p:not(.wp-caption-text)').first().find('> strong').first().text()
-              } else {
-                title = $('.entry-content p:not(.wp-caption-text)').first().text()
-              }
-              title = title.replace(/["\n]/g, '').replace(/^([\w?!\- ]*[\w\-?!]+) *\(.+$/i, '$1')
-              const description = $.html(
-                (
-                  ($('#Story_Synopsis').text() !== '') ? $('#Story_Synopsis') : $('.entry-content > p > strong,.entry-content > h3 strong')
+          .toArray()
+          .filter(el => $(el).text().match(/(?:about|teasers|others)/i) === null)
+          .map(el => Promise
+            .resolve(axios.get($(el).attr('href')))
+            .then(novelResult => {
+              if (novelResult.status === 200) {
+                const $ = cheerio.load(novelResult.data)
+                let title = ''
+                const link = novelResult.config.url || ''
+                if ($('.entry-content p:not(.wp-caption-text)').first().find('> strong').length > 0) {
+                  title = $('.entry-content p:not(.wp-caption-text)').first().find('> strong').first().text()
+                } else {
+                  title = $('.entry-content p:not(.wp-caption-text)').first().text()
+                }
+                title = title.replace(/["\n]/g, '').replace(/^([\w?!\- ]*[\w\-?!]+) *\(.+$/i, '$1')
+                const description = $.html(
+                  (
+                    ($('#Story_Synopsis').text() !== '') ? $('#Story_Synopsis') : $('.entry-content > p > strong,.entry-content > h3 strong')
+                  )
+                    .closest('p,h3,h2')
+                    .nextUntil('hr')
+                    .each((_, p) => $(p).html($(p).text()))
                 )
-                .closest('p,h3,h2')
-                .nextUntil('hr')
-                .each((_, p) => $(p).html($(p).text()))
-              )
-              const cover = $('.entry-content img').first().attr('src')
-              return novels.add(title, this.slug, link, description, cover)
-            }
-            return ''
-          })
+                const cover = $('.entry-content img').first().attr('src')
+                return novels.add(title, this.slug, link, description, cover)
+              }
+              return ''
+            })
+          )
         )
-      )
     }
     return novels.get()
   }

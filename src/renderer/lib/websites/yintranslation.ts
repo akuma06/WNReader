@@ -4,7 +4,7 @@ import { WebsiteLoader, NovelResponse, WebsiteStyle } from '../Website'
 import { Novel, Chapter, Comment } from '../Database'
 import Novels from '../Novels'
 import Chapters from '../Chapters'
-import { remote } from 'electron';
+import { remote } from 'electron'
 
 axios.defaults.withCredentials = true
 
@@ -80,7 +80,7 @@ export default class YinTranslation implements WebsiteLoader {
     return []
   }
 
-  private prepareCookie() {
+  private prepareCookie () {
     const session = remote.session
     const cookie: Electron.Details = {url: 'https://yintranslations.com', name: 'Mcontent', value: 'True', domain: 'yintranslations.com'}
     if (session.defaultSession) {
