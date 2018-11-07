@@ -68,6 +68,9 @@ export default Vue.extend({
             title: 'Cache',
             text: 'La base de données a bien été effacé !'
           })
+          db.novels.toArray().then(novels => {
+            this.novels = novels
+          })
           btn.disabled = false
         })
       }

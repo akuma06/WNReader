@@ -7,6 +7,7 @@ import YinTranslation from './yintranslation'
 import Krytykal from './krytykal'
 import NakedSingularity from './nakedsingularitytrans'
 import Pumlated from './pumlated'
+import Webnovel from './webnovel';
 
 const websites: {
 [websiteID: string]: WebsiteLoader
@@ -18,6 +19,7 @@ const websites: {
   [new Krytykal().slug]: new Krytykal(),
   [new NakedSingularity().slug]: new NakedSingularity(),
   [new Pumlated().slug]: new Pumlated(),
+  [new Webnovel().slug]: new Webnovel(),
   [new SnowyCodex().slug]: new SnowyCodex()
 }
 

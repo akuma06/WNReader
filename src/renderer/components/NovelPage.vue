@@ -32,7 +32,7 @@
     <div class="chapters-list">
       <chapter-list-item
       v-for="chapter in chapters"
-      :key="chapter.title"
+      :key="chapter.id + chapter.title"
       :chapter="chapter"
       :novel="novel"
       @selected="onSelected" />

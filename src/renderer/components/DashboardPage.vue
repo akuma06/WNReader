@@ -113,6 +113,9 @@ export default Vue.extend({
       h1 {
         color: white;
       } 
+      > p {
+        color: white;
+      }
     }
   }
   .title {
