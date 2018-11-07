@@ -28,6 +28,7 @@
       </div>
       <p v-else>Aucun novels dans vos favoris</p>
     </div>
+    <settings-button />
   </div>
 </template>
 
@@ -35,6 +36,7 @@
 import Vue from 'vue'
 import WebsiteListItem from './DashboardPage/WebListItem.vue'
 import NovelListItem from './WebsitePage/NovelListItem.vue'
+import SettingsButton from './SettingsButton.vue'
 import websites from '../lib/websites'
 import { WebsiteLoader } from '../lib/Website'
 import { Novel, db, Bookmarked } from '../lib/Database'
@@ -49,7 +51,8 @@ export default Vue.extend({
   name: 'DashboardPage',
   components: {
     WebsiteListItem,
-    NovelListItem
+    NovelListItem,
+    SettingsButton
   },
   methods: {
     onClick (website: WebsiteLoader) {

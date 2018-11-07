@@ -1,21 +1,26 @@
 <template>
-  <div class="website" v-if="website !== null" @scroll="handleScroll">
+  <div class="website" @scroll="handleScroll">
     <div class="website-img" ref="websiteHeader" :style="website.style.header">
       <router-link :to="{ name: 'dashboard-page' }" class="home" :style="website.style.header">
         <font-awesome-icon icon="home" size="lg" />
       </router-link>
       <img :src="website.icon" :alt="website.name" :style="website.style.iconHeader" />
       <h1>{{ website.name }}</h1>
+      <span class="search">
+        <input type="text" v-model="filterNovels" name="search" placeholder="Filtrer" />
+        <font-awesome-icon icon="search" />
+      </span>
     </div>
-    <div class="novels-list">
+    <div class="novels-list" v-if="novels.length > 0">
       <novel-list-item
-      v-for="novel in novels"
+      v-for="novel in filteredNovels"
       :key="novel.title"
       :novel="novel"
       @selected="onSelected"></novel-list-item>
     </div>
+    <facebook-loader v-else></facebook-loader>
+    <settings-button />
   </div>
-  <facebook-loader v-else></facebook-loader>
 </template>
 
 <script lang="ts">
@@ -25,22 +30,26 @@ import websites from '../lib/websites'
 import Website, { WebsiteLoader } from '../lib/Website'
 import { Novel } from '../lib/Database'
 import NovelListItem from './WebsitePage/NovelListItem.vue'
+import SettingsButton from './SettingsButton.vue'
 
 type WebsiteData = {
   websiteModel: Website | null
   novels: Novel[]
+  filterNovels: string
 }
 export default Vue.extend({
   name: 'WebsitePage',
   components: {
     NovelListItem,
-    FacebookLoader
+    FacebookLoader,
+    SettingsButton
   },
   data (): WebsiteData {
     const websiteLoader = websites[this.$route.params.website]
     return {
       websiteModel: (websiteLoader !== undefined) ? new Website({ website: websiteLoader }) : null,
-      novels: []
+      novels: [],
+      filterNovels: this.$route.params.filter || ''
     }
   },
   methods: {
@@ -67,6 +76,12 @@ export default Vue.extend({
         return this.websiteModel.website
       }
       return null
+    },
+    filteredNovels (): Novel[] {
+      if (this.filterNovels === '') {
+        return this.novels
+      }
+      return this.novels.filter(novel => novel.title.match(new RegExp(this.filterNovels, 'i')) !== null)
     }
   },
   created () {
@@ -121,6 +136,39 @@ export default Vue.extend({
       margin: 0;
       line-height: 35px;
       font-family: 'Gill Sans', 'Gill Sans MT', Calibri, 'Trebuchet MS', sans-serif
+    }
+    .search {
+      display: flex;
+      align-items: center;
+      flex-direction: row;
+      color: gray;
+      position: absolute;
+      right: 0;
+      margin: auto;
+      height: 100%;
+      input {
+        border: 1px solid lightgray;
+        border-radius: 15px;
+        padding: 0px 1.5em 0px 10px;
+        background: none;
+        height: 70%;
+        display: inline-block;
+        position: relative;
+        z-index: 2;
+        font-size: 1em;
+        width: 50%;
+        transition: border-color .2s;
+        &:focus {
+          outline: none;
+          border-color: var(--biolet);
+          box-shadow: 0px 0px 10px var(--biolet);  
+        }
+      }
+      svg {
+        position: relative;
+        left: -1.5em;
+        z-index: 0;
+      }
     }
   }
   .novels-list {

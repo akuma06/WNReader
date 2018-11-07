@@ -37,6 +37,7 @@
       :novel="novel"
       @selected="onSelected" />
     </div>
+    <settings-button />
   </div>
   <facebook-loader v-else />
 </template>
@@ -45,6 +46,7 @@
 import Vue from 'vue'
 import { FacebookLoader } from 'vue-content-loader'
 import ChapterListItem from './NovelPage/ChapterListItem.vue'
+import SettingsButton from './SettingsButton.vue'
 import { Novel, Chapter, Bookmarked, db } from '../lib/Database'
 import Website from '../lib/Website'
 import websites from '../lib/websites'
@@ -60,7 +62,8 @@ export default Vue.extend({
   name: 'NovelPage',
   components: {
     ChapterListItem,
-    FacebookLoader
+    FacebookLoader,
+    SettingsButton
   },
   data (): NovelPageData {
     const websiteLoader = websites[this.$route.params.website]
