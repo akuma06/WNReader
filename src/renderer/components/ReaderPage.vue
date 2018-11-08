@@ -501,6 +501,7 @@ export default Vue.extend({
       background-color: white;
       .chapter-content {
         font-size: 24px;
+        white-space: pre-line;
         /deep/ a {
           color: var(--biolet);
         }
