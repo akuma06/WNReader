@@ -44,7 +44,7 @@ export default Vue.extend({
       savedSettings: getSettings()
     }
   },
-  metaInfo () { 
+  metaInfo () {
     return {
       title: this.$t('Settings').toString()
     }
