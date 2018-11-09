@@ -29,7 +29,7 @@
     </div>
     <div class="synopsis" v-html="novel.description">
     </div>
-    <div class="chapters-list">
+    <div class="chapters-list" v-if="!loading && chapters.length > 0">
       <chapter-list-item
       v-for="chapter in chapters"
       :key="chapter.id + chapter.title"
@@ -37,6 +37,13 @@
       :novel="novel"
       @selected="onSelected" />
     </div>
+    <div class="chapters-list" v-else-if="!loading && chapters.length === 0">
+      <p style="text-align:center;">
+        {{ 'Network_Error' }}<br>
+        <a href="#" @click.prevent="reload" v-text="$t('Try_Again')"></a>
+      </p>
+    </div>
+    <facebook-loader v-else />
     <settings-button />
   </div>
   <facebook-loader v-else />
@@ -54,6 +61,7 @@ import websites from '../lib/websites'
 type NovelPageData = {
   novel: Novel | null
   chapters: Chapter[]
+  loading: boolean
   websiteModel: Website | null
   Bookmarked: typeof Bookmarked
 }
@@ -70,6 +78,7 @@ export default Vue.extend({
     return {
       novel: null,
       chapters: [],
+      loading: true,
       websiteModel: (websiteLoader !== undefined) ? new Website({ website: websiteLoader }) : null,
       Bookmarked
     }
@@ -109,17 +118,22 @@ export default Vue.extend({
           cover.classList.toggle('sticky', container.scrollTop > 100)
         }
       }
+    },
+    reload () {
+      if (this.websiteModel !== null) {
+        this.loading = true
+        this.websiteModel.loadNovel(parseInt(this.$route.params.novel))
+          .then(novelResponse => {
+            this.loading = false
+            this.novel = novelResponse.novel
+            this.chapters = novelResponse.chapters
+            return novelResponse
+          }).catch(console.log.bind(console))
+      }
     }
   },
   created () {
-    if (this.websiteModel !== null) {
-      this.websiteModel.loadNovel(parseInt(this.$route.params.novel))
-        .then(novelResponse => {
-          this.novel = novelResponse.novel
-          this.chapters = novelResponse.chapters
-          return novelResponse
-        }).catch(console.log.bind(console))
-    }
+    this.reload()
   }
 })
 </script>

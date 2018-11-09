@@ -21,6 +21,7 @@
     "lang": "Français",
     "Loading": "Chargement...",
     "no_bookmarks_msg": "Aucun novels dans vos favoris",
+    "Network_Error": "Une erreur de chargement est survenue.",
     "Novels": "Novels",
     "Novels_of": "Novels sur {0}",
     "number_of_entries_msg": "Il y a actuellement {0} novels stockés dans la base de donnée.",
@@ -30,5 +31,6 @@
     "Search": "Rechercher",
     "Settings": "Paramètres",
     "Show_Comments": "Afficher les commentaires",
+    "Try_Again": "Recharger",
     "Websites": "Sites Web"
 }

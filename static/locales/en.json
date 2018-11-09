@@ -21,6 +21,7 @@
     "lang": "English",
     "Loading": "Chargement...",
     "no_bookmarks_msg": "No novels in your bookmarks.",
+    "Network_Error": "A network error has been encountered while loading.",
     "Novels": "Novels",
     "Novels_of": "{0}'s Novels",
     "number_of_entries_msg": "There are now {0} novels in the database.",
@@ -30,5 +31,6 @@
     "Search": "Search",
     "Settings": "Settings",
     "Show_Comments": "Show comments",
+    "Try_Again": "Try Again",
     "Websites": "Websites"
 }

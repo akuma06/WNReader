@@ -11,12 +11,18 @@
         <font-awesome-icon icon="search" />
       </span>
     </div>
-    <div class="novels-list" v-if="novels.length > 0">
+    <div class="novels-list" v-if="novels.length > 0 && !loading">
       <novel-list-item
       v-for="novel in filteredNovels"
       :key="novel.title"
       :novel="novel"
       @selected="onSelected"></novel-list-item>
+    </div>
+    <div class="novels-list" v-else-if="novels.length === 0 && !loading">
+      <p style="text-align:center;">
+        {{ 'Network_Error' }}<br>
+        <a href="#" @click.prevent="reload" v-text="$t('Try_Again')"></a>
+      </p>
     </div>
     <facebook-loader v-else></facebook-loader>
     <settings-button />
@@ -35,6 +41,7 @@ import SettingsButton from './SettingsButton.vue'
 type WebsiteData = {
   websiteModel: Website | null
   novels: Novel[]
+  loading: boolean
   filterNovels: string
 }
 export default Vue.extend({
@@ -49,6 +56,7 @@ export default Vue.extend({
     return {
       websiteModel: (websiteLoader !== undefined) ? new Website({ website: websiteLoader }) : null,
       novels: [],
+      loading: true,
       filterNovels: this.$route.params.filter || ''
     }
   },
@@ -71,6 +79,18 @@ export default Vue.extend({
           cover.classList.toggle('sticky', container.scrollTop > 100)
         }
       }
+    },
+    reload () {
+      if (this.websiteModel !== null) {
+        this.loading = true
+        this.websiteModel.loadNovels().then(data => {
+          this.loading = false
+          if (data.length > 0) {
+            this.novels = data
+          }
+          return data
+        }).catch(console.log.bind(console))
+      }
     }
   },
   computed: {
@@ -91,12 +111,7 @@ export default Vue.extend({
     }
   },
   created () {
-    if (this.websiteModel !== null) {
-      this.websiteModel.loadNovels().then(data => {
-        this.novels = data
-        return data
-      }).catch(console.log.bind(console))
-    }
+    this.reload()
   }
 })
 </script>

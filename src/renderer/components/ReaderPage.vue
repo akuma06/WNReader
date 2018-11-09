@@ -20,9 +20,15 @@
     </div>
     <div class="main" ref="readerContent" @scroll="handleScroll" @mousewheel="handleWheel">
       <div class="content" ref="content">
-        <h1 class="chapter-title" v-if="!this.loading">{{ chapter.title }}</h1>
-        <div class="chapter-content" v-show="!this.loading" v-html="chapter.content" @click.prevent="handleContentClick"></div>
-        <div class="chapter-content" v-show="this.loading" v-text="$t('Loading')"></div>
+        <h1 class="chapter-title" v-show="!this.loading && chapter.title !== ''">{{ chapter.title }}</h1>
+        <div class="chapter-content" v-if="!this.loading && chapter.content !== '' " v-html="chapter.content" @click.prevent="handleContentClick"></div>
+        <div class="chapter-content" v-else-if="!this.loading && chapter.content === '' ">
+          <p style="text-align:center;">
+            {{ 'Network_Error' }}<br>
+            <a href="#" @click.prevent="reload" v-text="$t('Try_Again')"></a>
+          </p>
+        </div>
+        <div class="chapter-content" v-else v-text="$t('Loading')"></div>
       </div>
       <div class="side">
         <ul>
@@ -356,6 +362,22 @@ export default Vue.extend({
           }, 4000)
         }
       }
+    },
+    reload () {
+      if (this.websiteModel !== null) {
+        this.loading = true
+        const { novel, chapter } = this.$route.params
+        this.websiteModel.loadChapter(parseInt(novel), parseInt(chapter)).then(chapterResponse => {
+          this.novel = chapterResponse.novel
+          this.chapter = chapterResponse.chapter
+          this.chapters = chapterResponse.chapters
+          this.loading = false
+          return this.$nextTick()
+        }).then(_ => {
+          this.checkPosition()
+          this.fadeInHeader()
+        })
+      }
     }
   },
   watch: {
@@ -382,17 +404,7 @@ export default Vue.extend({
   },
   created () {
     if (this.websiteModel !== null) {
-      const { novel, chapter } = this.$route.params
-      this.websiteModel.loadChapter(parseInt(novel), parseInt(chapter)).then(chapterResponse => {
-        this.novel = chapterResponse.novel
-        this.chapter = chapterResponse.chapter
-        this.chapters = chapterResponse.chapters
-        this.loading = false
-        return this.$nextTick()
-      }).then(_ => {
-        this.checkPosition()
-        this.fadeInHeader()
-      })
+      this.reload()
       document.addEventListener('keyup', this.handleKeyUp)
       document.addEventListener('keydown', this.handleKeyDown)
       document.addEventListener('mousemove', this.fadeInHeader)
