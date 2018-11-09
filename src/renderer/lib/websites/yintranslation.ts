@@ -1,6 +1,6 @@
 import axios from 'axios'
 import * as cheerio from 'cheerio'
-import { WebsiteLoader, NovelResponse, WebsiteStyle } from '../Website'
+import { WebsiteLoader, NovelResponse, WebsiteStyle, NoDataGivenException } from '../Website'
 import { Novel, Chapter, Comment } from '../Database'
 import Novels from '../Novels'
 import Chapters from '../Chapters'
@@ -19,15 +19,20 @@ export default class YinTranslation implements WebsiteLoader {
 
   public async getNovels (): Promise<Novel[]> {
     this.prepareCookie()
-    const result = await axios.get(`${this.url}/web-novel-translations/`)
     const novels = new Novels()
-    if (result.status === 200) {
-      const $ = cheerio.load(result.data)
-      $('.entry-content h3').each((i, el) => {
-        const link = $('#menu-item-848 a').toArray().find(e => $(e).text() === $(el).text())
-        const url = ($(link).attr('href').match(this.url) !== null) ? $(link).attr('href') : this.url + $(el).attr('href')
-        novels.add($(el).text(), this.slug, url)
-      })
+    try {
+      const result = await axios.get(`${this.url}/web-novel-translations/`)
+      if (result.status === 200) {
+        const $ = cheerio.load(result.data)
+        $('.entry-content h3').each((i, el) => {
+          const link = $('#menu-item-848 a').toArray().find(e => $(e).text() === $(el).text())
+          const url = ($(link).attr('href').match(this.url) !== null) ? $(link).attr('href') : this.url + $(el).attr('href')
+          novels.add($(el).text(), this.slug, url)
+        })
+      }
+    } catch (e) {
+      console.error(e)
+      throw NoDataGivenException
     }
     return novels.get()
   }
@@ -35,44 +40,54 @@ export default class YinTranslation implements WebsiteLoader {
   public async getNovel (novel: Novel): Promise<NovelResponse> {
     this.prepareCookie()
     console.assert(novel.id !== undefined, 'Novel id is not defined')
-    const result = await axios.get(novel.url, { headers: { Cookie: 'Mcontent=True;' } })
     const chapters = new Chapters()
-    if (result.status === 200) {
-      const $ = cheerio.load(result.data)
-      novel.cover = $('.entry-content img').first().attr('src')
-      novel.lastUpdate = new Date()
-      $('.entry-content a').each((i, el) => {
-        if ($(el).attr('href').match(this.url) !== null) {
-          const url = ($(el).attr('href').match(this.url) !== null) ? $(el).attr('href') : this.url + $(el).attr('href')
-          chapters.add(`Chapter ${chapters.length + 1}`, novel.id!, url)
-        }
-      })
+    try {
+      const result = await axios.get(novel.url, { headers: { Cookie: 'Mcontent=True;' } })
+      if (result.status === 200) {
+        const $ = cheerio.load(result.data)
+        novel.cover = $('.entry-content img').first().attr('src')
+        novel.lastUpdate = new Date()
+        $('.entry-content a').each((i, el) => {
+          if ($(el).attr('href').match(this.url) !== null) {
+            const url = ($(el).attr('href').match(this.url) !== null) ? $(el).attr('href') : this.url + $(el).attr('href')
+            chapters.add(`Chapter ${chapters.length + 1}`, novel.id!, url)
+          }
+        })
+      }
+    } catch (e) {
+      console.error(e)
+      throw NoDataGivenException
     }
     return { novel, chapters: chapters.get() }
   }
 
   public async getChapter (novel: Novel, chapter: Chapter): Promise<Chapter> {
     this.prepareCookie()
-    const result = await axios.get(chapter.url, { withCredentials: true })
-    let content = ''
-    if (result.status === 200) {
-      const $ = cheerio.load(result.data)
-      const contentHTML = $('.entry-content').html()
-      if (contentHTML !== null) {
-        content = contentHTML
+    try {
+      const result = await axios.get(chapter.url, { withCredentials: true })
+      let content = ''
+      if (result.status === 200) {
+        const $ = cheerio.load(result.data)
+        const contentHTML = $('.entry-content').html()
+        if (contentHTML !== null) {
+          content = contentHTML
+        }
+        if (chapter.next === undefined || chapter.prev === undefined) {
+          $('.entry-content a').each((i, el): void => {
+            if (chapter.next === undefined && $(el).text().match(/next/i) !== null) {
+              chapter.next = $(el).attr('href')
+            }
+            if (chapter.prev === undefined && $(el).text().match(/prev/i) !== null) {
+              chapter.prev = $(el).attr('href')
+            }
+          })
+        }
       }
-      if (chapter.next === undefined || chapter.prev === undefined) {
-        $('.entry-content a').each((i, el): void => {
-          if (chapter.next === undefined && $(el).text().match(/next/i) !== null) {
-            chapter.next = $(el).attr('href')
-          }
-          if (chapter.prev === undefined && $(el).text().match(/prev/i) !== null) {
-            chapter.prev = $(el).attr('href')
-          }
-        })
-      }
+      chapter.content = content
+    } catch (e) {
+      console.error(e)
+      throw NoDataGivenException
     }
-    chapter.content = content
     return chapter
   }
 

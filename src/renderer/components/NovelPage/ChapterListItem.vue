@@ -1,7 +1,7 @@
 <template>
     <button type="button" @click="onSelected" class="chapter-item" :class="{ reading: (novel.lastRead && novel.lastRead.id === chapter.id) }">
       {{chapter.title}}
-      <span class="tag" v-if="novel.lastRead && novel.lastRead.id === chapter.id">reading</span>
+      <span class="tag" v-if="novel.lastRead && novel.lastRead.id === chapter.id" v-text="$t('reading')"></span>
     </button>
 </template>
 

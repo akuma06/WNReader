@@ -2,7 +2,7 @@
   <div class="novel" v-if="novel !== null" @scroll="handleScroll">
     <div class="novel-header" ref="novelHeader" :style="websiteModel.website.style.header">
       <div class="left">
-        <router-link :to="{ name: 'website-page', params: { website: novel.website }}" :style="websiteModel.website.style.header" class="back">
+        <router-link :to="{ name: 'website-page', params: { website: novel.website }}" :style="websiteModel.website.style.header" class="back" :title="$t('Back')">
           <font-awesome-icon icon="arrow-left" size="lg" />
         </router-link>
         <img :src="novel.cover" :alt="novel.title" :style="websiteModel.website.style.iconHeader" />
@@ -12,15 +12,15 @@
         <a
           href="#"
           @click.prevent="handleContinue"
-          title="Reprendre la lecture"
+          :title="$t('Continue_Reading')"
           v-show="novel.lastRead"
         >
-          <font-awesome-icon icon="book-reader" />&nbsp;Reprendre
+          <font-awesome-icon icon="book-reader" />&nbsp;{{ $t('Continue') }}
         </a>
         <a
           href="#"
           @click.prevent="handleBookmark"
-          title="Ajouter aux favoris"
+          :title="$t('Add_to_bookmarks')"
           :class="{ enabled: (novel.bookmarked === Bookmarked.Yes) }"
         >
           <font-awesome-icon icon="bookmark" />
@@ -72,6 +72,12 @@ export default Vue.extend({
       chapters: [],
       websiteModel: (websiteLoader !== undefined) ? new Website({ website: websiteLoader }) : null,
       Bookmarked
+    }
+  },
+  metaInfo () {
+    const novel = (this as any).novel
+    return {
+      title: (novel !== null) ? this.$t('Chapters_of', [novel.title]).toString() : this.$t('Chapters').toString()
     }
   },
   methods: {

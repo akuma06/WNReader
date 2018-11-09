@@ -6,6 +6,8 @@ export type WebsiteStyle = {
   readonly iconHeader?: Partial<CSSStyleDeclaration>
 }
 
+export const NoDataGivenException = Error('No data given')
+
 export interface WebsiteLoader {
     getNovels(): Promise<Novel[]>
     getNovel(novel: Novel): Promise<NovelResponse>
@@ -48,30 +50,35 @@ export default class Website {
     }
 
     public async loadNovels (): Promise<Novel[]> {
-      const novelsRequest = await this.website.getNovels()
-      const novelsPromise = novelsRequest.map((novel: Novel): Promise<Novel> => Promise.resolve(db.novels.get({ title: novel.title, website: this.website.slug }))
-        .then((result: Novel | undefined): Promise<number> | number => {
-          if (result === undefined) {
-            novel.lastUpdate = new Date()
-            novel.website = this.website.slug
-            return db.novels.add(novel)
-          } else if (result.id !== undefined) {
-            novel.description = (result.description !== '') ? result.description : novel.description
-            novel.bookmarked = result.bookmarked
-            novel.cover = (result.cover !== '') ? result.cover : novel.cover
-            db.novels.update(result.id, novel)
-            return result.id
-          } else {
-            throw Error('Id du résultat non défini')
-          }
-        }).then((id: number): Novel => {
-          if (novel.id === undefined) {
-            novel.id = id
-          }
-          return novel
-        })
-      )
-      this.novels = await Promise.all(novelsPromise)
+      try {
+        const novelsRequest = await this.website.getNovels()
+        const novelsPromise = novelsRequest.map((novel: Novel): Promise<Novel> => Promise.resolve(db.novels.get({ title: novel.title, website: this.website.slug }))
+          .then((result: Novel | undefined): Promise<number> | number => {
+            if (result === undefined) {
+              novel.lastUpdate = new Date()
+              novel.website = this.website.slug
+              return db.novels.add(novel)
+            } else if (result.id !== undefined) {
+              novel.description = (result.description !== '') ? result.description : novel.description
+              novel.bookmarked = result.bookmarked
+              novel.cover = (result.cover !== '') ? result.cover : novel.cover
+              db.novels.update(result.id, novel)
+              return result.id
+            } else {
+              throw Error('Id du résultat non défini')
+            }
+          }).then((id: number): Novel => {
+            if (novel.id === undefined) {
+              novel.id = id
+            }
+            return novel
+          })
+        )
+        this.novels = await Promise.all(novelsPromise)
+      } catch (e) {
+        console.error(e)
+        this.novels = []
+      }
       if (this.novels.length === 0) {
         this.novels = await db.novels.where({ website: this.website.slug }).toArray()
       }
@@ -87,29 +94,34 @@ export default class Website {
       const chapters = await db.chapters.where({ novel: novelId }).toArray()
       let novelResponse: NovelResponse = { novel, chapters }
       if (shouldRefresh || chapters.length === 0) {
-        novelResponse = await this.website.getNovel(novel)
-        if (novelResponse.novel.id !== undefined) {
-          db.novels.update(novelResponse.novel.id, novelResponse.novel)
+        try {
+          novelResponse = await this.website.getNovel(novel)
+          if (novelResponse.novel.id !== undefined) {
+            db.novels.update(novelResponse.novel.id, novelResponse.novel)
+          }
+          novelResponse.chapters = await Promise.all(novelResponse.chapters.map((chapter: Chapter): Promise<Chapter> => Promise.resolve(db.chapters.get({ title: chapter.title, novel: novelId })).then((result: Chapter | undefined): Promise<number> | number => {
+            if (result === undefined) {
+              chapter.novel = novelId
+              chapter.lastUpdate = new Date()
+              return db.chapters.add(chapter)
+            } else if (result.id !== undefined) {
+              chapter.content = result.content
+              db.chapters.update(result.id, chapter)
+              return result.id
+            } else {
+              throw Error('Id du resultat non défini')
+            }
+          }).then((id: number): Chapter => {
+            if (chapter.id === undefined) {
+              chapter.id = id
+            }
+            return chapter
+          })
+          ))
+        } catch (e) {
+          console.error(e)
+          novelResponse.chapters = []
         }
-        novelResponse.chapters = await Promise.all(novelResponse.chapters.map((chapter: Chapter): Promise<Chapter> => Promise.resolve(db.chapters.get({ title: chapter.title, novel: novelId })).then((result: Chapter | undefined): Promise<number> | number => {
-          if (result === undefined) {
-            chapter.novel = novelId
-            chapter.lastUpdate = new Date()
-            return db.chapters.add(chapter)
-          } else if (result.id !== undefined) {
-            chapter.content = result.content
-            db.chapters.update(result.id, chapter)
-            return result.id
-          } else {
-            throw Error('Id du resultat non défini')
-          }
-        }).then((id: number): Chapter => {
-          if (chapter.id === undefined) {
-            chapter.id = id
-          }
-          return chapter
-        })
-        ))
       }
       if (novelResponse.chapters.length === 0) {
         novelResponse.chapters = chapters

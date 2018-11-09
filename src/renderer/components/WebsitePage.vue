@@ -1,13 +1,13 @@
 <template>
   <div class="website" @scroll="handleScroll">
     <div class="website-img" ref="websiteHeader" :style="website.style.header">
-      <router-link :to="{ name: 'dashboard-page' }" class="home" :style="website.style.header">
+      <router-link :to="{ name: 'dashboard-page' }" class="home" :style="website.style.header" :title="$t('Dashboard')">
         <font-awesome-icon icon="home" size="lg" />
       </router-link>
       <img :src="website.icon" :alt="website.name" :style="website.style.iconHeader" />
       <h1>{{ website.name }}</h1>
       <span class="search">
-        <input type="text" v-model="filterNovels" name="search" placeholder="Filtrer" />
+        <input type="text" v-model="filterNovels" name="search" :placeholder="$t('Filter')" />
         <font-awesome-icon icon="search" />
       </span>
     </div>
@@ -50,6 +50,12 @@ export default Vue.extend({
       websiteModel: (websiteLoader !== undefined) ? new Website({ website: websiteLoader }) : null,
       novels: [],
       filterNovels: this.$route.params.filter || ''
+    }
+  },
+  metaInfo () {
+    const website = (this as any).website
+    return {
+      title: (website !== null) ? this.$t('Novels_of', [website.name]).toString() : this.$t('Novels').toString()
     }
   },
   methods: {

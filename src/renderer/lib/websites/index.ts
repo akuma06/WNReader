@@ -7,7 +7,7 @@ import YinTranslation from './yintranslation'
 import Krytykal from './krytykal'
 import NakedSingularity from './nakedsingularitytrans'
 import Pumlated from './pumlated'
-import Webnovel from './webnovel';
+import Webnovel from './webnovel'
 
 const websites: {
 [websiteID: string]: WebsiteLoader

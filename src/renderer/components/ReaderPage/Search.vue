@@ -1,7 +1,7 @@
 <template>
   <div class="search" @keyup.esc="closeEvent">
     <div class="search-box">
-      <input type="text" v-model="search" name="search" ref="searchField" @keyup.esc="closeEvent" @keyup.enter="handleNext"/>
+      <input type="text" :placeholder="$t('Search')" v-model="search" name="search" ref="searchField" @keyup.esc="closeEvent" @keyup.enter="handleNext"/>
       <button :disabled="!hasPrevious" class="previous" @click.prevent="handlePrevious">
         <font-awesome-icon icon="arrow-left" />
       </button>

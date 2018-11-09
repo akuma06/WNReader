@@ -1,16 +1,22 @@
 <template>
   <div class="page">
     <div class="header">
-      <a href="#" @click.prevent="goBack" class="back">
+      <a href="#" @click.prevent="goBack" class="back" :title="$t('Back')">
         <font-awesome-icon icon="arrow-left" size="lg" />
       </a>
-      <h1><font-awesome-icon icon="cog" size="lg" />&nbsp;Paramètres</h1>
+      <h1><font-awesome-icon icon="cog" size="lg" />&nbsp;{{ $t('Settings') }}</h1>
     </div>
     <div class="content">
       <p>
-        Il y a actuellement {{ novels.length }} novels stockés dans la base de donnée.<br />
-        <button @click="flushCache">Vider le cacher</button>
-        <button @click="eraseDatabase">Effacer la base de données</button>
+        {{ $t('number_of_entries_msg', [novels.length]) }}<br />
+        <button @click="flushCache">{{ $t('Empty_Cache') }}</button>
+        <button @click="eraseDatabase">{{ $t('Erase_DB') }}</button>
+      </p>
+      <p>
+        {{ $t('Choose_language') }}
+        <select v-model="savedSettings.lang">
+          <option :key="'langs_' + lang[0]" v-for="lang in langsAvailable" :value="lang[0]">{{ lang.join(' - ') }}</option>
+        </select>
       </p>
       <hr>
     </div>
@@ -20,16 +26,27 @@
 <script lang="ts">
 import Vue from 'vue'
 import { Novel, db } from '../lib/Database'
+import { SaveSettings, getSettings } from '../lib/Settings'
+import { langs } from '../i18n'
 
 type SettingsPageData = {
   novels: Novel[]
+  langs: typeof langs
+  savedSettings: SaveSettings
 }
 
 export default Vue.extend({
   name: 'SettingsPage',
   data (): SettingsPageData {
     return {
-      novels: []
+      novels: [],
+      langs,
+      savedSettings: getSettings()
+    }
+  },
+  metaInfo () { 
+    return {
+      title: this.$t('Settings').toString()
     }
   },
   methods: {
@@ -48,8 +65,8 @@ export default Vue.extend({
       Promise.all(promises).then(_ => {
         this.$notify({
           group: 'main',
-          title: 'Cache',
-          text: 'Le cache a bien été vidé !'
+          title: this.$t('Cache').toString(),
+          text: this.$t('cache_empty_msg').toString()
         })
         btn.disabled = false
       })
@@ -57,7 +74,7 @@ export default Vue.extend({
     eraseDatabase (e: UIEvent) {
       const btn = e.target as HTMLButtonElement
       btn.disabled = true
-      if (confirm('En nettoyant la base de données, vous perdrez toutes les données concernant vos positions de lectures et vos favoris.\nVoulez-vous continuer ?')) {
+      if (confirm(this.$t('erase_db_msg').toString())) {
         const promises = [
           db.novels.clear(),
           db.chapters.clear()
@@ -65,8 +82,8 @@ export default Vue.extend({
         Promise.all(promises).then(_ => {
           this.$notify({
             group: 'main',
-            title: 'Cache',
-            text: 'La base de données a bien été effacé !'
+            title: this.$t('DB').toString(),
+            text: this.$t('erased_db_msg').toString()
           })
           db.novels.toArray().then(novels => {
             this.novels = novels
@@ -74,6 +91,20 @@ export default Vue.extend({
           btn.disabled = false
         })
       }
+    }
+  },
+  watch: {
+    savedSettings: {
+      handler (newSettings: SaveSettings, prevSettings: SaveSettings) {
+        localStorage.setItem('savedSettings', JSON.stringify(newSettings))
+        this.$i18n.locale = newSettings.lang
+      },
+      deep: true
+    }
+  },
+  computed: {
+    langsAvailable (): [string, string][] {
+      return Array.from(this.langs)
     }
   },
   created () {

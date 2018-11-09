@@ -1,6 +1,6 @@
 import axios from 'axios'
 import * as cheerio from 'cheerio'
-import { WebsiteLoader, NovelResponse, WebsiteStyle } from '../Website'
+import { WebsiteLoader, NovelResponse, WebsiteStyle, NoDataGivenException } from '../Website'
 import { Novel, Chapter, Comment, db } from '../Database'
 import Novels from '../Novels'
 import Chapters from '../Chapters'
@@ -44,30 +44,40 @@ export default class NakedSingularity implements WebsiteLoader {
 
   public async getNovel (novel: Novel): Promise<NovelResponse> {
     console.assert(novel.id !== undefined, 'Novel id is not defined')
-    const items = await getFeedEntries({ url: novel.url })
     const chapters = new Chapters()
-    if (items.length > 0) {
-      novel.lastUpdate = new Date()
-      items.forEach(chapter => chapters.add(chapter.title, novel.id!, chapter.link))
+    try {
+      const items = await getFeedEntries({ url: novel.url })
+      if (items.length > 0) {
+        novel.lastUpdate = new Date()
+        items.forEach(chapter => chapters.add(chapter.title, novel.id!, chapter.link))
+      }
+    } catch (e) {
+      console.error(e)
+      throw NoDataGivenException
     }
     return { novel, chapters: chapters.get() }
   }
 
   public async getChapter (novel: Novel, chapter: Chapter): Promise<Chapter> {
-    const result = await axios.get(chapter.url)
-    let content = ''
-    if (result.status === 200) {
-      const $ = cheerio.load(result.data)
-      const contentHTML = $('.entry-content').html()
-      if (contentHTML !== null) {
-        content = contentHTML
+    try {
+      const result = await axios.get(chapter.url)
+      let content = ''
+      if (result.status === 200) {
+        const $ = cheerio.load(result.data)
+        const contentHTML = $('.entry-content').html()
+        if (contentHTML !== null) {
+          content = contentHTML
+        }
+        if (chapter.title === '') {
+          chapter.title = $('.entry-title').text()
+          chapter.slug = slugify(chapter.title)
+        }
       }
-      if (chapter.title === '') {
-        chapter.title = $('.entry-title').text()
-        chapter.slug = slugify(chapter.title)
-      }
+      chapter.content = content
+    } catch (e) {
+      console.error(e)
+      throw NoDataGivenException
     }
-    chapter.content = content
     return chapter
   }
 

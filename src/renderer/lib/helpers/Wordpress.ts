@@ -1,6 +1,6 @@
 import * as cheerio from 'cheerio'
 import Parser, { Items } from 'rss-parser'
-import { WebsiteLoader, NovelResponse, WebsiteStyle } from '../Website'
+import { WebsiteLoader, NovelResponse, WebsiteStyle, NoDataGivenException } from '../Website'
 import { Novel, Chapter, Comment, db } from '../Database'
 import Chapters from '../Chapters'
 import slugify from 'slugify'
@@ -75,68 +75,85 @@ export class Wordpress implements WebsiteLoader {
     return url.replace(/\/$/, '').split('/').pop()
   }
   public async getNovels (): Promise<Novel[]> {
-    const result = await Axios.get(this.url)
     const novels = new Novels()
-    if (result.status === 200) {
-      const $ = cheerio.load(result.data)
-      await Promise.all(this.getNovelsFromMenu($).toArray().map(link => Promise.resolve().then(() => {
-        const url = ($(link).attr('href').match(this.url) !== null) ? $(link).attr('href') : this.url + $(link).attr('href')
-        return Axios.get(url)
-      }).then(result => {
-        if (result.status === 200 && result.config.url) {
-          const $ = cheerio.load(result.data)
-          const cover = this.findCover($)
-          const description = this.findDescription($)
-          const novelUrl = (this.useFeed) ? `${this.url}/category/${this.getCategory(result.config.url)}/feed/` : result.config.url
-          const novelTitle = this.findTitle($)
+    try {
+      const result = await Axios.get(this.url)
+      if (result.status === 200) {
+        const $ = cheerio.load(result.data)
+        await Promise.all(this.getNovelsFromMenu($).toArray().map(link => Promise.resolve().then(() => {
+          const url = ($(link).attr('href').match(this.url) !== null) ? $(link).attr('href') : this.url + $(link).attr('href')
+          return Axios.get(url)
+        }).then(result => {
+          if (result.status === 200 && result.config.url) {
+            const $ = cheerio.load(result.data)
+            const cover = this.findCover($)
+            const description = this.findDescription($)
+            const novelUrl = (this.useFeed) ? `${this.url}/category/${this.getCategory(result.config.url)}/feed/` : result.config.url
+            const novelTitle = this.findTitle($)
 
-          return novels.add(novelTitle, this.slug, novelUrl, description, cover)
-        }
-        return ''
-      })))
+            return novels.add(novelTitle, this.slug, novelUrl, description, cover)
+          }
+          return ''
+        })))
+      }
+    } catch (e) {
+      console.error(e)
+      throw NoDataGivenException
     }
     return novels.get()
   }
   public async getNovel (novel: Novel): Promise<NovelResponse> {
     console.assert(novel.id !== undefined, 'Novel id is not defined')
-    const items = await getFeedEntries({ url: novel.url, maxEntries: this.nbEntries })
     const chapters = new Chapters()
+    const items = await getFeedEntries({ url: novel.url, maxEntries: this.nbEntries })
     if (items.length > 0) {
       novel.lastUpdate = new Date()
       items.forEach(chapter => chapters.add(chapter.title, novel.id!, chapter.link))
+    } else {
+      throw NoDataGivenException
     }
     return { novel, chapters: chapters.get() }
   }
   public async getChapter (novel: Novel, chapter: Chapter): Promise<Chapter> {
-    const result = await Axios.get(chapter.url)
-    let content = ''
-    if (result.status === 200) {
-      const $ = cheerio.load(result.data)
-      const contentHTML = $('.entry-content').html()
-      if (contentHTML !== null) {
-        content = contentHTML
+    try {
+      const result = await Axios.get(chapter.url)
+      let content = ''
+      if (result.status === 200) {
+        const $ = cheerio.load(result.data)
+        const contentHTML = $('.entry-content').html()
+        if (contentHTML !== null) {
+          content = contentHTML
+        }
+        if (chapter.title === '') {
+          chapter.title = $('.entry-title').text()
+          chapter.slug = slugify(chapter.title)
+        }
       }
-      if (chapter.title === '') {
-        chapter.title = $('.entry-title').text()
-        chapter.slug = slugify(chapter.title)
-      }
+      chapter.content = content
+    } catch (e) {
+      console.error(e)
+      throw NoDataGivenException
     }
-    chapter.content = content
     return chapter
   }
   public async getComments (novel: Novel, chapter: Chapter): Promise<Comment[]> {
-    const result = await Axios.get(`${chapter.url}`)
     const comments: Comment[] = []
-    if (result.status === 200) {
-      const $ = cheerio.load(result.data)
-      $('.comment-list  .comment-body').each((i, el): void => {
-        comments.push({
-          avatar: $(el).find('> .comment-meta > .comment-author img').attr('src'),
-          username: $(el).find('> .comment-meta > .comment-author a').first().text(),
-          content: $.html($(el).find('> .comment-content > p:not(.comment-likes)')),
-          date: $(el).find('> .comment-meta > .comment-metadata').first().text()
+    try {
+      const result = await Axios.get(`${chapter.url}`)
+      if (result.status === 200) {
+        const $ = cheerio.load(result.data)
+        $('.comment-list  .comment-body').each((i, el): void => {
+          comments.push({
+            avatar: $(el).find('> .comment-meta > .comment-author img').attr('src'),
+            username: $(el).find('> .comment-meta > .comment-author a').first().text(),
+            content: $.html($(el).find('> .comment-content > p:not(.comment-likes)')),
+            date: $(el).find('> .comment-meta > .comment-metadata').first().text()
+          })
         })
-      })
+      }
+    } catch (e) {
+      console.error(e)
+      throw NoDataGivenException
     }
     return comments
   }

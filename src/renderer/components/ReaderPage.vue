@@ -2,7 +2,7 @@
   <div v-if="chapter !== null" class="reader">
     <div class="header" :class="{ show: showHeader, hide: !showHeader }" ref="readerHeader" @mouseover="handleOverHeader" @mouseout="enableFade = true">
       <div class="left">
-        <router-link :to="{ name: 'novel-page', params: { novel: novel.id.toString(), website: websiteModel.website.slug }}">
+        <router-link :to="{ name: 'novel-page', params: { novel: novel.id.toString(), website: websiteModel.website.slug }}" :title="novel.title">
           <img src="@/assets/logo.png" />
         </router-link>
         <h1>{{ chapter.title }}</h1>
@@ -11,7 +11,7 @@
         <a
           href="#"
           @click.prevent="handleBookmark"
-          title="Ajouter aux favoris"
+          :title="$t('Add_to_bookmarks')"
           :class="{ enabled: (novel.bookmarked === Bookmarked.Yes) }"
         >
           <font-awesome-icon icon="bookmark" />
@@ -22,28 +22,28 @@
       <div class="content" ref="content">
         <h1 class="chapter-title" v-if="!this.loading">{{ chapter.title }}</h1>
         <div class="chapter-content" v-show="!this.loading" v-html="chapter.content" @click.prevent="handleContentClick"></div>
-        <div class="chapter-content" v-show="this.loading">Loading...</div>
+        <div class="chapter-content" v-show="this.loading" v-text="$t('Loading')"></div>
       </div>
       <div class="side">
         <ul>
           <li>
-            <a href="#" @click.prevent="handlePanel(Panels.Comments)" title="Show comments">
+            <a href="#" @click.prevent="handlePanel(Panels.Comments)" :title="$t('Show_Comments')">
               <font-awesome-icon icon="comment" />
             </a>
           </li>
           <li>
-            <a href="#" @click.prevent="handlePanel(Panels.Chapters)" title="Chapter list">
+            <a href="#" @click.prevent="handlePanel(Panels.Chapters)" :title="$t('Chapter_List')">
               <font-awesome-icon icon="list" />
             </a>
           </li>
           <li>
-            <a href="#" @click.prevent="handleFullscreen()" title="Fullscreen">
+            <a href="#" @click.prevent="handleFullscreen()" :title="$t('Fullscreen')">
               <font-awesome-icon icon="expand" />
             </a>
           </li>
           <li class="separator"></li>
           <li>
-            <a href="#" @click.prevent="handleSettings" title="Paramètres">
+            <a href="#" @click.prevent="handleSettings" :title="$t('Settings')">
               <font-awesome-icon icon="cog" />
             </a>
           </li>
@@ -122,6 +122,12 @@ export default Vue.extend({
       enableSearch: false,
       Panels,
       Bookmarked
+    }
+  },
+  metaInfo () {
+    const novel = (this as any).novel
+    return {
+      title: (novel !== null) ? this.$t('Reading_of', [novel.title]).toString() : this.$t('Reading').toString()
     }
   },
   methods: {

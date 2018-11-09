@@ -1,6 +1,6 @@
 import axios from 'axios'
 import * as cheerio from 'cheerio'
-import { WebsiteLoader, NovelResponse, WebsiteStyle } from '../Website'
+import { WebsiteLoader, NovelResponse, WebsiteStyle, NoDataGivenException } from '../Website'
 import { Novel, Chapter, Comment } from '../Database'
 import Novels from '../Novels'
 import Chapters from '../Chapters'
@@ -14,48 +14,63 @@ export default class MachineSliced implements WebsiteLoader {
   public style: WebsiteStyle = {}
 
   public async getNovels (): Promise<Novel[]> {
-    const result = await axios.get(this.url)
     const novels = new Novels()
-    if (result.status === 200) {
-      const $ = cheerio.load(result.data)
-      $('.entry-content li a').each((i, el): void => {
-        if ($(el).attr('href').match(this.url) !== null) {
-          novels.add($(el).text(), this.slug, $(el).attr('href'))
-        }
-      })
+    try {
+      const result = await axios.get(this.url)
+      if (result.status === 200) {
+        const $ = cheerio.load(result.data)
+        $('.entry-content li a').each((i, el): void => {
+          if ($(el).attr('href').match(this.url) !== null) {
+            novels.add($(el).text(), this.slug, $(el).attr('href'))
+          }
+        })
+      }
+    } catch (e) {
+      console.error(e)
+      throw NoDataGivenException
     }
     return novels.get()
   }
   public async getNovel (novel: Novel): Promise<NovelResponse> {
     console.assert(novel.id !== undefined, 'Novel id is not defined')
-    const result = await axios.get(novel.url)
     const chapters = new Chapters()
-    if (result.status === 200) {
-      const $ = cheerio.load(result.data)
-      $('.entry-content a').each((i, el): void => {
-        if ($(el).attr('href').match(this.url) !== null) {
-          const title = $(el).text()
-          chapters.add(title, novel.id!, $(el).attr('href'))
-        }
-      })
+    try {
+      const result = await axios.get(novel.url)
+      if (result.status === 200) {
+        const $ = cheerio.load(result.data)
+        $('.entry-content a').each((i, el): void => {
+          if ($(el).attr('href').match(this.url) !== null) {
+            const title = $(el).text()
+            chapters.add(title, novel.id!, $(el).attr('href'))
+          }
+        })
+      }
+    } catch (e) {
+      console.error(e)
+      throw NoDataGivenException
     }
     return { novel, chapters: chapters.get() }
   }
   public async getChapter (novel: Novel, chapter: Chapter): Promise<Chapter> {
-    const result = await axios.get(chapter.url)
-    let content = ''
-    if (result.status === 200) {
-      const $ = cheerio.load(result.data)
-      const contentHTML = $('.entry-content').html()
-      if (contentHTML !== null) {
-        content = contentHTML
+    try {
+      const result = await axios.get(chapter.url)
+      let content = ''
+      if (result.status === 200) {
+        const $ = cheerio.load(result.data)
+        const contentHTML = $('.entry-content').html()
+        if (contentHTML !== null) {
+          content = contentHTML
+        }
+        if (chapter.title === '') {
+          chapter.title = $('.entry-title').text()
+          chapter.slug = slugify(chapter.title)
+        }
       }
-      if (chapter.title === '') {
-        chapter.title = $('.entry-title').text()
-        chapter.slug = slugify(chapter.title)
-      }
+      chapter.content = content
+    } catch (e) {
+      console.error(e)
+      throw NoDataGivenException
     }
-    chapter.content = content
     return chapter
   }
 

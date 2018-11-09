@@ -1,8 +1,8 @@
-import { WebsiteLoader, NovelResponse, WebsiteStyle } from "../Website";
-import { Novel, Chapter, Comment } from "../Database";
-import Axios from "axios";
-import Novels from "../Novels";
-import Chapters from "../Chapters";
+import { WebsiteLoader, NovelResponse, WebsiteStyle, NoDataGivenException } from '../Website'
+import { Novel, Chapter, Comment } from '../Database'
+import Axios from 'axios'
+import Novels from '../Novels'
+import Chapters from '../Chapters'
 
 type WNTagResponse = {
   tagId: number
@@ -21,7 +21,7 @@ type WNNovelResponse = {
   type: number
 }
 
-type WebNovelBasicResponse<T> = {
+type WebNovelBasicResponse < T > = {
   code: number
   data: T
   msg: string
@@ -74,6 +74,26 @@ type WNItem = {
   userId?: string
 }
 
+type WNUserResponse = {
+  SS: number
+  UUT: number
+  availableEnergy: number
+  availablePower: number
+  avatar: string
+  emailStatus: number
+  guid: string
+  isCheckin: number
+  mt: number
+  nickName: string
+  penName: string
+  role: number
+  status: number
+  totalEnergy: number
+  totalPower: number
+  userLevel: number
+  userName: string
+}
+
 type WNBookInfoResponse = WebNovelBasicResponse<{
   bookInfo: {
     actionStatus: number
@@ -123,26 +143,6 @@ type WNBookInfoResponse = WebNovelBasicResponse<{
   user: WNUserResponse
 }>
 
-type WNUserResponse = {
-  SS: number
-  UUT: number
-  availableEnergy: number
-  availablePower: number
-  avatar: string
-  emailStatus: number
-  guid: string
-  isCheckin: number
-  mt: number
-  nickName: string
-  penName: string
-  role: number
-  status: number
-  totalEnergy: number
-  totalPower: number
-  userLevel: number
-  userName: string
-}
-
 type WNChapterResponse = WebNovelBasicResponse<{
   bookInfo: {
     actionStatus: number
@@ -186,17 +186,18 @@ type WNChapterResponse = WebNovelBasicResponse<{
   }
 }>
 
-type WNCommentResponse = WebNovelBasicResponse<{
-  info: {
-    bookId: string
-    bookName: string
-    chapterId: string
-    chapterIndex: number
-    chapterName: string
-    replyNums: number
-  }
-  chapterReviewItems: ChapterReviewItemsEntity[]
-}>
+export interface BadgeInfo {
+  badgeId: number
+  badgeType: string
+  badgeName: string
+  maxGrade: number
+  achievedMaxGrade: number
+  achievedTime: string
+  achievedGradeGoal: string
+  baseUrl: string
+  updateTime: number
+}
+
 type ChapterReviewItemsEntity = {
   id: string
   content: string
@@ -224,18 +225,18 @@ type ChapterReviewItemsEntity = {
   UUT: number
   pUUT?: number | null
 }
-export interface BadgeInfo {
-  badgeId: number
-  badgeType: string
-  badgeName: string
-  maxGrade: number
-  achievedMaxGrade: number
-  achievedTime: string
-  achievedGradeGoal: string
-  baseUrl: string
-  updateTime: number
-}
 
+type WNCommentResponse = WebNovelBasicResponse<{
+  info: {
+    bookId: string
+    bookName: string
+    chapterId: string
+    chapterIndex: number
+    chapterName: string
+    replyNums: number
+  }
+  chapterReviewItems: ChapterReviewItemsEntity[]
+}>
 
 export default class Webnovel implements WebsiteLoader {
   public get name (): string { return 'Webnovel' }
@@ -246,58 +247,68 @@ export default class Webnovel implements WebsiteLoader {
 
   private async fecthList (page: number = 1): Promise<WNNovelResponse[]> {
     const novels: WNNovelResponse[] = []
-    const json = await Axios.get(`https://www.webnovel.com/apiajax/category/ajax?_csrfToken=&orderBy=4&pageIndex=${page}&category=0&tagName=&bookType=1`)
-    if (json.status === 200) {
-      const result = json.data as WebNovelListResponse
-      if (result.msg === 'Success') {
-        const { items, total } = result.data
-        novels.push(...items)
-        if (total > 0) {
-          page++
-          novels.push(...await this.fecthList(page))
+    try {
+      const json = await Axios.get(`https://www.webnovel.com/apiajax/category/ajax?_csrfToken=&orderBy=4&pageIndex=${page}&category=0&tagName=&bookType=1`)
+      if (json.status === 200) {
+        const result = json.data as WebNovelListResponse
+        if (result.msg === 'Success') {
+          const { items, total } = result.data
+          novels.push(...items)
+          if (total > 0) {
+            page++
+            novels.push(...await this.fecthList(page))
+          }
         }
       }
+    } catch (e) {
+      console.error(e)
+      throw NoDataGivenException
     }
     return novels
   }
 
   private async fetchChapterList (novel: Novel): Promise<WNChapterListResponse | null> {
-    const result = await Axios.get(`https://m.webnovel.com/ajax/chapter/getChapterListAjax?_csrfToken=&bookId=${novel.url}`)
-    if (result.status === 200) {
-      try {
+    try {
+      const result = await Axios.get(`https://m.webnovel.com/ajax/chapter/getChapterListAjax?_csrfToken=&bookId=${novel.url}`)
+      if (result.status === 200) {
         return result.data as WNChapterListResponse
-      } catch (error) {
-        console.error(error)
-        return null
       }
+    } catch (e) {
+      console.error(e)
+      throw NoDataGivenException
     }
     return null
   }
 
   private async fetchBookInfo (novel: Novel): Promise<WNBookInfoResponse | null> {
-    const result = await Axios.get(`https://m.webnovel.com/ajax/book/GetBookDetailPage?_csrfToken=&bookId=${novel.url}`)
-    if (result.status === 200) {
-      try {
+    try {
+      const result = await Axios.get(`https://m.webnovel.com/ajax/book/GetBookDetailPage?_csrfToken=&bookId=${novel.url}`)
+      if (result.status === 200) {
         return result.data as WNBookInfoResponse
-      } catch (error) {
-        console.error(error)
-        return null
       }
+    } catch (e) {
+      console.error(e)
+      throw NoDataGivenException
     }
     return null
   }
   private async fetchComments (novel: Novel, chapter: Chapter, page: number = 1, recycling: boolean = false): Promise<ChapterReviewItemsEntity[]> {
-    const result = await Axios.get(`https://www.webnovel.com/apiajax/ChapterReview/GetChapterReviewsAjax?_csrfToken=&bookId=${novel.url}&chapterId=${chapter.url}&pageIndex=${page}&orderBy=1&_=`)
     const items: ChapterReviewItemsEntity[] = []
-    if (result.status === 200) {
-      const commentResponse = result.data as WNCommentResponse
-      if (commentResponse.data.chapterReviewItems.length > 0) {
-        page++
-        items.push(...commentResponse.data.chapterReviewItems)
-        if (!recycling) {
-          items.push(...await this.fetchComments(novel, chapter, page))
+    try {
+      const result = await Axios.get(`https://www.webnovel.com/apiajax/ChapterReview/GetChapterReviewsAjax?_csrfToken=&bookId=${novel.url}&chapterId=${chapter.url}&pageIndex=${page}&orderBy=1&_=`)
+      if (result.status === 200) {
+        const commentResponse = result.data as WNCommentResponse
+        if (commentResponse.data.chapterReviewItems.length > 0) {
+          page++
+          items.push(...commentResponse.data.chapterReviewItems)
+          if (!recycling) {
+            items.push(...await this.fetchComments(novel, chapter, page))
+          }
         }
       }
+    } catch (e) {
+      console.error(e)
+      throw NoDataGivenException
     }
     return items
   }
@@ -315,45 +326,55 @@ export default class Webnovel implements WebsiteLoader {
     })
     return novels.get()
   }
-  async getNovel(novel: Novel): Promise<NovelResponse> {
+  public async getNovel (novel: Novel): Promise<NovelResponse> {
     const chapters = new Chapters()
-    const novelResponse = await this.fetchBookInfo(novel)
-    if (novelResponse !== null) {
-      novel.description = novelResponse.data.bookInfo.description
-      novel.lastUpdate = new Date()
-    }
-    const chapterList = await this.fetchChapterList(novel)
-    if (chapterList !== null) {
-      chapterList.data.volumeItems.forEach(volume => {
-        volume.chapterItems.forEach(chapter => {
-          chapters.add(`Chapter ${chapter.chapterIndex}: ${chapter.chapterName}`, chapter.chapterIndex, chapter.chapterId)
+    try {
+      const novelResponse = await this.fetchBookInfo(novel)
+      if (novelResponse !== null) {
+        novel.description = novelResponse.data.bookInfo.description
+        novel.lastUpdate = new Date()
+      }
+      const chapterList = await this.fetchChapterList(novel)
+      if (chapterList !== null) {
+        chapterList.data.volumeItems.forEach(volume => {
+          volume.chapterItems.forEach(chapter => {
+            chapters.add(`Chapter ${chapter.chapterIndex}: ${chapter.chapterName}`, chapter.chapterIndex, chapter.chapterId)
+          })
         })
-      })
+      }
+    } catch (e) {
+      console.error(e)
+      throw NoDataGivenException
     }
     const chaptersArr = chapters.get()
     return { chapters: chaptersArr, novel }
   }
   public async getChapter (novel: Novel, chapter: Chapter): Promise<Chapter> {
-    const result = await Axios.get(`https://www.webnovel.com/apiajax/chapter/GetContent?_csrfToken=&bookId=${novel.url}&chapterId=${chapter.url}&_=`)
-    if (result.status === 200) {
-      try {
+    try {
+      const result = await Axios.get(`https://www.webnovel.com/apiajax/chapter/GetContent?_csrfToken=&bookId=${novel.url}&chapterId=${chapter.url}&_=`)
+      if (result.status === 200) {
         const chapterResponse = result.data as WNChapterResponse
         chapter.content = chapterResponse.data.chapterInfo.content
-      } catch (error) {
-        console.error(error)
       }
+    } catch (e) {
+      console.error(e)
+      throw NoDataGivenException
     }
     return chapter
   }
   public async getComments (novel: Novel, chapter: Chapter): Promise<Comment[]> {
-    const comments = (await this.fetchComments(novel, chapter, 1, true)).map((comment): Comment => {
-      return {
-        avatar: comment.avatar,
-        username: comment.userName,
-        content: comment.content,
-        date: comment.updateTime,
-      }
-    })
-    return comments
+    try {
+      return (await this.fetchComments(novel, chapter, 1, true)).map((comment): Comment => {
+        return {
+          avatar: comment.avatar,
+          username: comment.userName,
+          content: comment.content,
+          date: comment.updateTime
+        }
+      })
+    } catch (e) {
+      console.error(e)
+      throw NoDataGivenException
+    }
   }
 }

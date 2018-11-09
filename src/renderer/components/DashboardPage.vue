@@ -2,9 +2,9 @@
   <div class="container">
     <div class="card">
       <div class="title">
-        <h1>Sites Web</h1>
+        <h1>{{ $t('Websites') }}</h1>
         <span class="search">
-          <input type="text" v-model="filterWebsite" name="search" placeholder="Filtrer" />
+          <input type="text" v-model="filterWebsite" name="search" :placeholder="$t('Filter')" />
           <font-awesome-icon icon="search" />
         </span>
       </div>
@@ -17,7 +17,7 @@
       </div>
     </div>
     <div class="card biolet">
-      <h1>Favoris</h1>
+      <h1>{{ $t('Bookmarks') }}</h1>
       <div class="bookmark-list" v-if="novels.length > 0">
         <novel-list-item
           v-for="(novel, key) in novels"
@@ -26,7 +26,7 @@
           :key="'nvbook_' + key"
         />
       </div>
-      <p v-else>Aucun novels dans vos favoris</p>
+      <p v-else>{{ $t('no_bookmarks_msg') }}</p>
     </div>
     <settings-button />
   </div>
@@ -53,6 +53,11 @@ export default Vue.extend({
     WebsiteListItem,
     NovelListItem,
     SettingsButton
+  },
+  metaInfo () {
+    return {
+      title: this.$t('Dashboard').toString()
+    }
   },
   methods: {
     onClick (website: WebsiteLoader) {

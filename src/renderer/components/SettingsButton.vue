@@ -1,5 +1,5 @@
 <template>
-  <button @click.prevent="handleClick" class="fab-settings" title="Settings">
+  <button @click.prevent="handleClick" class="fab-settings" :title="$t('Settings')">
     <font-awesome-icon icon='cog' />
   </button>
 </template>
