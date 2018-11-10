@@ -366,7 +366,7 @@ export default class Webnovel implements WebsiteLoader {
     try {
       return (await this.fetchComments(novel, chapter, 1, true)).map((comment): Comment => {
         return {
-          avatar: comment.avatar,
+          avatar: `https:${comment.avatar}`,
           username: comment.userName,
           content: comment.content,
           date: comment.updateTime
