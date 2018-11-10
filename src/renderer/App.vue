@@ -32,6 +32,7 @@ body {
   background-color: var(--greybg);
   font-family: Arial, Helvetica, Helvetica Neue, serif;
   overflow-y: hidden;
+  user-select: none;
 }
 
 h2 {
