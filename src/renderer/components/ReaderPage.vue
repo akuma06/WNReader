@@ -517,7 +517,7 @@ export default Vue.extend({
       padding: 2.5em;
       margin: auto;
       background-color: white;
-      user-select: all;
+      user-select: auto;
       .chapter-content {
         font-size: 24px;
         white-space: pre-line;
