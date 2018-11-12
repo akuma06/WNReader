@@ -16,7 +16,7 @@ export default class Novels {
       }
     }
 
-    public add (title: string, website: string, url: string, description: string = '', cover: string = ''): string {
+    public add (title: string, website: string, url: string, description: string = '', cover: string = '', tags: string[] = []): string {
       const novel: Novel = {
         title,
         slug: slugify(title),
@@ -25,7 +25,8 @@ export default class Novels {
         description,
         cover,
         bookmarked: Bookmarked.No,
-        lastUpdate: new Date()
+        lastUpdate: new Date(),
+        tags
       }
       this.novels.set(novel.slug, novel)
       return novel.slug

@@ -6,10 +6,18 @@
       </router-link>
       <img :src="website.icon" :alt="website.name" :style="website.style.iconHeader" />
       <h1>{{ website.name }}</h1>
-      <span class="search">
-        <input type="text" v-model="filterNovels" name="search" :placeholder="$t('Filter')" />
+      <div class="search">
+        <div class="search-input">
+          <div class="tags" v-show="selectedTags.length > 0">
+            <span class="tag" v-for="(tag, i) in selectedTags" @click="removeTag(tag)" :key="'tag_'+i" v-text="tag"></span>
+          </div>
+          <input type="text" v-model="filterNovels" name="search" @keydown.delete="handleSearchDelete" @focus="searchFocus = true" @blur="searchFocus = false" :placeholder="$t('Filter')" />
+        </div>
         <font-awesome-icon icon="search" />
-      </span>
+        <div class="dropdown-tags" v-show="dropdownTags.length > 0 && (searchFocus || (!searchFocus && drpOver))" @mouseover="drpOver = true" @mouseout="drpOver = false">
+          <a href="#" v-for="(tag,i) in dropdownTags" @click.prevent="handleTag(tag)" :key="'drptag_'+i" v-text="tag"></a>
+        </div>
+      </div>
     </div>
     <div class="novels-list" v-if="novels.length > 0 && !loading">
       <novel-list-item
@@ -34,7 +42,7 @@ import Vue from 'vue'
 import { FacebookLoader } from 'vue-content-loader'
 import websites from '../lib/websites'
 import Website, { WebsiteLoader } from '../lib/Website'
-import { Novel } from '../lib/Database'
+import { Novel, db } from '../lib/Database'
 import NovelListItem from './WebsitePage/NovelListItem.vue'
 import SettingsButton from './SettingsButton.vue'
 
@@ -43,6 +51,10 @@ type WebsiteData = {
   novels: Novel[]
   loading: boolean
   filterNovels: string
+  tags: string[]
+  selectedTags: string[]
+  searchFocus: boolean
+  drpOver: boolean
 }
 export default Vue.extend({
   name: 'WebsitePage',
@@ -57,7 +69,11 @@ export default Vue.extend({
       websiteModel: (websiteLoader !== undefined) ? new Website({ website: websiteLoader }) : null,
       novels: [],
       loading: true,
-      filterNovels: this.$route.params.filter || ''
+      filterNovels: this.$route.params.filter || '',
+      tags: [],
+      selectedTags: [],
+      searchFocus: false,
+      drpOver: false
     }
   },
   metaInfo () {
@@ -82,14 +98,39 @@ export default Vue.extend({
     },
     reload () {
       if (this.websiteModel !== null) {
+        const websiteModel = this.websiteModel
         this.loading = true
-        this.websiteModel.loadNovels().then(data => {
+        websiteModel.loadNovels().then(data => {
           this.loading = false
           if (data.length > 0) {
             this.novels = data
           }
           return data
+        }).then(data => {
+          if (data.length > 0) {
+            this.tags = [...new Set(data.map(novel => novel.tags).reduce((acc, tags) => acc.concat(tags, [])))]
+          }
+          return data
         }).catch(console.log.bind(console))
+      }
+    },
+    handleTag (tag: string) {
+      if (tag !== '') {
+        this.selectedTags.push(tag)
+        this.filterNovels = ''
+      }
+    },
+    removeTag (tag: string) {
+      if (tag !== '') {
+        const ind = this.selectedTags.lastIndexOf(tag)
+        if (ind !== null) {
+          this.selectedTags.splice(this.selectedTags.lastIndexOf(tag), 1)
+        }
+      }
+    },
+    handleSearchDelete () {
+      if (this.filterNovels === '' && this.selectedTags.length > 0) {
+        this.selectedTags.pop()
       }
     }
   },
@@ -104,10 +145,16 @@ export default Vue.extend({
       return null
     },
     filteredNovels (): Novel[] {
-      if (this.filterNovels === '') {
+      if (this.filterNovels === '' && this.selectedTags.length === 0) {
         return this.novels
       }
-      return this.novels.filter(novel => novel.title.match(new RegExp(this.filterNovels, 'i')) !== null)
+      return this.novels.filter(novel => novel.title.match(new RegExp(this.filterNovels, 'i')) !== null && this.selectedTags.every(tag => novel.tags.lastIndexOf(tag) > -1))
+    },
+    dropdownTags (): string[] {
+      if (this.tags.length === 0 || this.filterNovels === '') {
+        return []
+      }
+      return this.tags.filter(tag => (this.selectedTags.lastIndexOf(tag) === -1 && tag.match(new RegExp(this.filterNovels, 'i')) !== null)).slice(0, 5)
     }
   },
   created () {
@@ -167,20 +214,53 @@ export default Vue.extend({
       right: 0;
       margin: auto;
       height: 100%;
-      input {
+      padding-left: 5px; 
+      .search-input {
         border: 1px solid lightgray;
         border-radius: 15px;
-        padding: 0px 1.5em 0px 10px;
-        background: none;
         height: 70%;
-        display: inline-block;
-        position: relative;
-        z-index: 2;
-        font-size: 1em;
-        width: 50%;
-        transition: border-color .2s;
-        &:focus {
-          outline: none;
+        display: flex;
+        align-items: center;
+        overflow: hidden;
+        input {
+          padding: 0px 1.5em 0px 10px;
+          border-radius: 15px;
+          border: 0;
+          background: none;
+          height: 100%;
+          display: inline-block;
+          position: relative;
+          z-index: 2;
+          font-size: 1em;
+          width: 100%;
+          transition: border-color .2s;
+          &:focus {
+            outline: none;
+          }
+        }
+        .tags {
+          height: 90%;
+          display: flex;
+          flex-direction: row;
+          .tag {
+            background-color: var(--biolet);
+            border-radius: 1em;
+            display: block;
+            height: 100%;
+            font-size: 12px;
+            color: white;
+            line-height: 26px;
+            padding: 0 5px;
+            cursor: pointer;
+            transition: opacity .2s;
+            margin-left: 3px;
+            white-space: nowrap;
+            &:hover {
+              opacity: .7;
+            }
+          }
+        }
+        &:focus-within {
           border-color: var(--biolet);
           box-shadow: 0px 0px 10px var(--biolet);  
         }
@@ -189,6 +269,18 @@ export default Vue.extend({
         position: relative;
         left: -1.5em;
         z-index: 0;
+      }
+      .dropdown-tags {
+        position: absolute;
+        top: 100%;
+        right: 16px;
+        z-index: 5;
+        background-color: var(--biolet);
+        width: 92%;
+        a {
+          display: block;
+          padding: 3px 5px 0;
+        }
       }
     }
   }

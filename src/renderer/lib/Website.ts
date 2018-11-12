@@ -49,6 +49,10 @@ export default class Website {
       this.novels = []
     }
 
+    public get name () {
+      return this.website.name
+    }
+
     public async loadNovels (): Promise<Novel[]> {
       try {
         const novelsRequest = await this.website.getNovels()
@@ -61,6 +65,7 @@ export default class Website {
             } else if (result.id !== undefined) {
               novel.description = (result.description !== '') ? result.description : novel.description
               novel.bookmarked = result.bookmarked
+              novel.tags = (result.tags.length > 0) ? result.tags : novel.tags
               novel.cover = (result.cover !== '') ? result.cover : novel.cover
               db.novels.update(result.id, novel)
               return result.id

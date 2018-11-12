@@ -30,6 +30,7 @@ export type Novel = {
   bookmarked: number
   lastRead?: Chapter
   lastUpdate: Date
+  tags: string[]
 }
 
 export type Comment = {
@@ -47,6 +48,28 @@ class NovelDB extends Dexie {
 
   public constructor () {
     super('NovelDB')
+    this.version(6).stores({
+      websites: '++id,slug',
+      novels: '++id,website,title,url,slug,bookmarked,lastUpdate,[title+website],*tags',
+      chapters: '++id,novel,title,url,slug,lastUpdate,[title+novel]'
+    }).upgrade((trans: any): Promise<number> => {
+      return (trans.novels as Dexie.Table<Novel, number>).toCollection().modify((novel: Novel): void => {
+        if (novel.tags === undefined) {
+          novel.tags = []
+        }
+      })
+    })
+    this.version(5).stores({
+      websites: '++id,slug',
+      novels: '++id,website,title,url,slug,bookmarked,lastUpdate,[title+website],*tags',
+      chapters: '++id,novel,title,url,slug,lastUpdate,[title+novel]'
+    }).upgrade((trans: any): Promise<number> => {
+      return (trans.novels as Dexie.Table<Novel, number>).toCollection().modify((novel: Novel): void => {
+        if (novel.tags === undefined) {
+          novel.tags = []
+        }
+      })
+    })
     this.version(4).stores({
       websites: '++id,slug',
       novels: '++id,website,title,url,slug,bookmarked,lastUpdate,[title+website]',

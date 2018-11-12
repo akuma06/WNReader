@@ -321,7 +321,8 @@ export default class Webnovel implements WebsiteLoader {
         this.slug,
         novel.bookId,
         '',
-        `https://img.webnovel.com/bookcover/${novel.bookId}/300/300.jpg?coverUpdateTime=${novel.coverUpdateTime}`
+        `https://img.webnovel.com/bookcover/${novel.bookId}/300/300.jpg?coverUpdateTime=${novel.coverUpdateTime}`,
+        novel.tagInfo.map(tag => tag.tagName)
       )
     })
     return novels.get()
