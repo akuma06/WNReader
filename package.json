@@ -2,7 +2,7 @@
   "name": "wnreader",
   "version": "0.0.16",
   "author": "akuma06 <demon.akuma06@gmail.com>",
-  "description": "A Web Novel reader application",
+  "description": "A Web Novel Reader application",
   "license": "MIT",
   "main": "./dist/electron/main.js",
   "scripts": {
