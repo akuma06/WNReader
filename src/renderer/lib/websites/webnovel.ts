@@ -245,15 +245,24 @@ export default class Webnovel implements WebsiteLoader {
   public get icon (): string { return 'https://m.webnovel.com/launcher-icon-4x.png' }
   public style: WebsiteStyle = {}
 
-  private async fecthList (page: number = 1): Promise<WNNovelResponse[]> {
-    const novels: WNNovelResponse[] = []
+  private async fecthList (page: number = 1): Promise<Novel[]> {
+    const novels = new Novels()
     try {
       const json = await Axios.get(`https://www.webnovel.com/apiajax/category/ajax?_csrfToken=&orderBy=4&pageIndex=${page}&category=0&tagName=&bookType=1`)
       if (json.status === 200) {
         const result = json.data as WebNovelListResponse
         if (result.msg === 'Success') {
           const { items, total } = result.data
-          novels.push(...items)
+          items.forEach(novel => {
+            novels.add(
+              novel.bookName,
+              this.slug,
+              novel.bookId,
+              '',
+              `https://img.webnovel.com/bookcover/${novel.bookId}/300/300.jpg?coverUpdateTime=${novel.coverUpdateTime}`,
+              novel.tagInfo.map(tag => tag.tagName)
+            )
+          })
           if (total > 0) {
             page++
             novels.push(...await this.fecthList(page))
@@ -264,7 +273,7 @@ export default class Webnovel implements WebsiteLoader {
       console.error(e)
       throw NoDataGivenException
     }
-    return novels
+    return novels.get()
   }
 
   private async fetchChapterList (novel: Novel): Promise<WNChapterListResponse | null> {
@@ -280,17 +289,20 @@ export default class Webnovel implements WebsiteLoader {
     return null
   }
 
-  private async fetchBookInfo (novel: Novel): Promise<WNBookInfoResponse | null> {
+  private async fetchBookInfo (novel: Novel): Promise<Novel> {
     try {
       const result = await Axios.get(`https://m.webnovel.com/ajax/book/GetBookDetailPage?_csrfToken=&bookId=${novel.url}`)
       if (result.status === 200) {
-        return result.data as WNBookInfoResponse
+        const response = result.data as WNBookInfoResponse
+        novel.description = response.data.bookInfo.description
+        novel.lastUpdate = new Date()
+        return novel
       }
     } catch (e) {
       console.error(e)
       throw NoDataGivenException
     }
-    return null
+    return novel
   }
   private async fetchComments (novel: Novel, chapter: Chapter, page: number = 1, recycling: boolean = false): Promise<ChapterReviewItemsEntity[]> {
     const items: ChapterReviewItemsEntity[] = []
@@ -313,28 +325,13 @@ export default class Webnovel implements WebsiteLoader {
     return items
   }
   public async getNovels (): Promise<Novel[]> {
-    const novels = new Novels()
-    const novelsResponse = await this.fecthList(1)
-    novelsResponse.forEach(novel => {
-      novels.add(
-        novel.bookName,
-        this.slug,
-        novel.bookId,
-        '',
-        `https://img.webnovel.com/bookcover/${novel.bookId}/300/300.jpg?coverUpdateTime=${novel.coverUpdateTime}`,
-        novel.tagInfo.map(tag => tag.tagName)
-      )
-    })
-    return novels.get()
+    return this.fecthList(1)
   }
   public async getNovel (novel: Novel): Promise<NovelResponse> {
     const chapters = new Chapters()
+    let novelResponse = novel
     try {
-      const novelResponse = await this.fetchBookInfo(novel)
-      if (novelResponse !== null) {
-        novel.description = novelResponse.data.bookInfo.description
-        novel.lastUpdate = new Date()
-      }
+      novelResponse = await this.fetchBookInfo(novel)
       const chapterList = await this.fetchChapterList(novel)
       if (chapterList !== null) {
         chapterList.data.volumeItems.forEach(volume => {
@@ -348,7 +345,7 @@ export default class Webnovel implements WebsiteLoader {
       throw NoDataGivenException
     }
     const chaptersArr = chapters.get()
-    return { chapters: chaptersArr, novel }
+    return { chapters: chaptersArr, novel: novelResponse }
   }
   public async getChapter (novel: Novel, chapter: Chapter): Promise<Chapter> {
     try {

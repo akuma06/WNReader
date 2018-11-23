@@ -68,8 +68,20 @@ export class Wordpress implements WebsiteLoader {
   public findDescription ($: CheerioStatic) {
     return $('.entry-content > p').text()
   }
-  public findTitle ($: CheerioStatic) {
+  public findNovelTitle ($: CheerioStatic) {
     return $('.entry-title').text()
+  }
+  /**
+   * findChapterTitle
+   */
+  public findChapterTitle ($: CheerioStatic) {
+    return this.findNovelTitle($)
+  }
+  /**
+   * findChapterContent
+   */
+  public findChapterContent ($: CheerioStatic) {
+    return $('.entry-content').html()
   }
   public getCategory (url: string) {
     return url.replace(/\/$/, '').split('/').pop()
@@ -89,7 +101,7 @@ export class Wordpress implements WebsiteLoader {
             const cover = this.findCover($)
             const description = this.findDescription($)
             const novelUrl = (this.useFeed) ? `${this.url}/category/${this.getCategory(result.config.url)}/feed/` : result.config.url
-            const novelTitle = this.findTitle($)
+            const novelTitle = this.findNovelTitle($)
 
             return novels.add(novelTitle, this.slug, novelUrl, description, cover)
           }
@@ -120,12 +132,12 @@ export class Wordpress implements WebsiteLoader {
       let content = ''
       if (result.status === 200) {
         const $ = cheerio.load(result.data)
-        const contentHTML = $('.entry-content').html()
+        const contentHTML = this.findChapterContent($)
         if (contentHTML !== null) {
           content = contentHTML
         }
         if (chapter.title === '') {
-          chapter.title = $('.entry-title').text()
+          chapter.title = this.findChapterTitle($)
           chapter.slug = slugify(chapter.title)
         }
       }

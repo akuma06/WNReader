@@ -35,6 +35,7 @@
       :key="chapter.id + chapter.title"
       :chapter="chapter"
       :novel="novel"
+      @focus="onFocus"
       @selected="onSelected" />
     </div>
     <div class="chapters-list" v-else-if="!loading && chapters.length === 0">
@@ -64,6 +65,7 @@ type NovelPageData = {
   loading: boolean
   websiteModel: Website | null
   Bookmarked: typeof Bookmarked
+  lastFocus: HTMLButtonElement | null
 }
 
 export default Vue.extend({
@@ -80,7 +82,8 @@ export default Vue.extend({
       chapters: [],
       loading: true,
       websiteModel: (websiteLoader !== undefined) ? new Website({ website: websiteLoader }) : null,
-      Bookmarked
+      Bookmarked,
+      lastFocus: null
     }
   },
   metaInfo () {
@@ -119,6 +122,30 @@ export default Vue.extend({
         }
       }
     },
+    onFocus (e: FocusEvent) {
+      const btn = e.target as HTMLButtonElement
+      this.lastFocus = btn
+    },
+    handleKeys (e: KeyboardEvent) {
+      switch (e.code) {
+        case 'ArrowUp':
+          e.preventDefault()
+          if (this.lastFocus !== null && this.lastFocus.previousElementSibling !== null) {
+            (this.lastFocus.previousElementSibling as HTMLButtonElement).focus()
+          } else {
+            (document.querySelector('.chapters-list button:last-child') as HTMLButtonElement).focus()
+          }
+          break
+        case 'ArrowDown':
+          e.preventDefault()
+          if (this.lastFocus !== null && this.lastFocus.nextElementSibling !== null) {
+            (this.lastFocus.nextElementSibling as HTMLButtonElement).focus()
+          } else {
+            (document.querySelector('.chapters-list button:first-child') as HTMLButtonElement).focus()
+          }
+          break
+      }
+    },
     reload () {
       if (this.websiteModel !== null) {
         this.loading = true
@@ -134,6 +161,7 @@ export default Vue.extend({
   },
   created () {
     this.reload()
+    document.addEventListener('keydown', this.handleKeys)
   }
 })
 </script>
@@ -213,7 +241,8 @@ export default Vue.extend({
     font-size: 18px;
   }
   .chapters-list {
-    background-color: var(--blackbg);
+    background-color: white;
+    padding: 0 0.5em;
   }
 }
 </style>

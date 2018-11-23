@@ -32,6 +32,19 @@ export default class Novels {
       return novel.slug
     }
 
+    /**
+     * push
+     */
+    public push(...novels: Novel[]) {
+      novels.forEach(novel => {
+        if (novel.slug === '') {
+          novel.slug = slugify(novel.title)
+        }
+        const { slug } = novel
+        this.novels.set(slug, novel)
+      })
+    }
+
     public remove (slug: string): boolean {
       return this.novels.delete(slug)
     }
