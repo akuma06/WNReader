@@ -11,7 +11,7 @@
           <div class="tags" v-show="selectedTags.length > 0">
             <span class="tag" v-for="(tag, i) in selectedTags" @click="removeTag(tag)" :key="'tag_'+i" v-text="tag"></span>
           </div>
-          <input type="text" v-model="filterNovels" name="search" @keydown.delete="handleSearchDelete" @focus="searchFocus = true" @blur="searchFocus = false" :placeholder="$t('Filter')" />
+          <input type="text" v-model="filterNovels" name="search" :disabled="novels.length === 0" @keydown.delete="handleSearchDelete" @focus="searchFocus = true" @blur="searchFocus = false" :placeholder="$t('Filter')" />
         </div>
         <font-awesome-icon icon="search" />
         <div class="dropdown-tags" v-show="dropdownTags.length > 0 && (searchFocus || (!searchFocus && drpOver))" @mouseover="drpOver = true" @mouseout="drpOver = false">
@@ -236,6 +236,9 @@ export default Vue.extend({
           transition: border-color .2s;
           &:focus {
             outline: none;
+          }
+          &[disabled] {
+            background: lightgray
           }
         }
         .tags {

@@ -252,7 +252,7 @@ export default class Webnovel implements WebsiteLoader {
       if (json.status === 200) {
         const result = json.data as WebNovelListResponse
         if (result.msg === 'Success') {
-          const { items, total } = result.data
+          const { items } = result.data
           items.forEach(novel => {
             novels.add(
               novel.bookName,
@@ -263,7 +263,7 @@ export default class Webnovel implements WebsiteLoader {
               novel.tagInfo.map(tag => tag.tagName)
             )
           })
-          if (total > 0) {
+          if (items.length > 0) {
             page++
             novels.push(...await this.fecthList(page))
           }
