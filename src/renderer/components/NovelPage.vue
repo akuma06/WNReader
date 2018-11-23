@@ -162,6 +162,9 @@ export default Vue.extend({
   created () {
     this.reload()
     document.addEventListener('keydown', this.handleKeys)
+  },
+  beforeDestroy () {
+    document.removeEventListener('keydown', this.handleKeys)
   }
 })
 </script>
