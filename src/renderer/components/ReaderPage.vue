@@ -412,10 +412,10 @@ export default Vue.extend({
     }
   },
   beforeDestroy () {
-      document.removeEventListener('keyup', this.handleKeyUp)
-      document.removeEventListener('keydown', this.handleKeyDown)
-      document.removeEventListener('mousemove', this.fadeInHeader)
-      document.removeEventListener('touchstart', this.fadeInHeader)
+    document.removeEventListener('keyup', this.handleKeyUp)
+    document.removeEventListener('keydown', this.handleKeyDown)
+    document.removeEventListener('mousemove', this.fadeInHeader)
+    document.removeEventListener('touchstart', this.fadeInHeader)
   }
 })
 </script>
