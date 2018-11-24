@@ -73,6 +73,19 @@
       <search-vue :container="$refs['content']" @close="enableSearch = false" :shown="enableSearch" />
     </div>
   </div>
+  <div class="card" v-else-if="chapter === null && !loading">
+    <p>
+      {{ $t('Network_Error') }}
+    </p>
+      <router-link :to="{ name: 'novel-page', params: { novel: $route.params.novel, website: websiteModel.website.slug }}" :title="$t('Back')">
+        {{ $t('Back') }}
+      </router-link>
+       - 
+      <a href="#" @click.prevent="reload">{{ $t('Try_Again') }}</a>
+  </div>
+  <div class="loading" v-else>
+    <font-awesome-icon icon="spinner"></font-awesome-icon>
+  </div>
 </template>
 
 <script lang="ts">
@@ -376,6 +389,8 @@ export default Vue.extend({
         }).then(_ => {
           this.checkPosition()
           this.fadeInHeader()
+        }).catch(e => {
+          this.loading = false
         })
       }
     }
@@ -635,5 +650,8 @@ export default Vue.extend({
     border-bottom-left-radius: 10px;
     border-bottom-right-radius: 10px;
   }
+}
+.card a {
+  color: var(--biolet);
 }
 </style>

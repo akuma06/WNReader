@@ -58,4 +58,26 @@ a:hover {
   text-decoration: none;
   cursor: pointer;
 }
+
+.card {
+    padding: 1em;
+    background: white;
+    box-shadow: 3px 2px 5px darkgrey;
+    margin-top: 15px;
+}
+
+@keyframes spin {
+  100% {
+    transform: rotate(360deg);
+  }
+}
+
+.loading {
+  text-align: center;
+  width: 100%;
+  height: 40px;
+  svg {
+    animation: spin 2s ease-out infinite
+  }
+}
 </style>

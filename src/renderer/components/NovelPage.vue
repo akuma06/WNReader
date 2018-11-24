@@ -25,6 +25,20 @@
         >
           <font-awesome-icon icon="bookmark" />
         </a>
+        <a
+          href="#"
+          @click.prevent="resetChapters"
+          :title="$t('Refresh')"
+        >
+          <font-awesome-icon icon="sync-alt" />
+        </a>
+        <a
+          href="#"
+          @click.prevent="saveNovel"
+          :title="$t('Save')"
+        >
+          <font-awesome-icon icon="save" />
+        </a>
       </div>
     </div>
     <div class="synopsis" v-html="novel.description">
@@ -40,12 +54,22 @@
     </div>
     <div class="chapters-list" v-else-if="!loading && chapters.length === 0">
       <p style="text-align:center;">
-        {{ 'Network_Error' }}<br>
-        <a href="#" @click.prevent="reload" v-text="$t('Try_Again')"></a>
+        {{ $t('Network_Error') }}<br>
+        <a href="#" @click.prevent="reload">{{ $t('Try_Again') }}</a>
       </p>
     </div>
     <facebook-loader v-else />
     <settings-button />
+  </div>
+  <div class="card" v-else-if="novel === null && !loading">
+    <p>
+      {{ $t('Network_Error') }}
+    </p>
+      <router-link :to="{ name: 'website-page', params: { website: websiteModel.website.slug }}" :title="$t('Back')">
+        {{ $t('Back') }}
+      </router-link>
+       - 
+      <a href="#" @click.prevent="reload">{{ $t('Try_Again') }}</a>
   </div>
   <facebook-loader v-else />
 </template>
@@ -155,7 +179,44 @@ export default Vue.extend({
             this.novel = novelResponse.novel
             this.chapters = novelResponse.chapters
             return novelResponse
-          }).catch(console.log.bind(console))
+          }).catch(e => {
+            this.loading = false
+            console.error(e)
+          })
+      }
+    },
+    resetChapters () {
+      if (this.novel !== null && this.novel.id !== undefined) {
+        if (!navigator.onLine && !confirm(this.$t('Network_Disconnected_Continue').toString())) {
+          return
+        }
+        db.chapters.where({ novel: this.novel.id }).delete()
+        this.reload()
+      }
+    },
+    saveNovel () {
+      if (this.websiteModel !== null && this.novel !== null) {
+        this.$notify({
+          group: 'main',
+          title: this.$t('Saving_Chapters').toString(),
+          duration: -1
+        })
+        this.websiteModel.cacheNovel(this.novel, chapter => {
+          this.$notify({
+            group: 'main',
+            title: this.$t('Chapter_Saved', [ chapter.title ]).toString(),
+            duration: 500
+          })
+        }, () => {
+          this.$notify({
+            group: 'main',
+            clean: true
+          })
+          this.$notify({
+            group: 'main',
+            title: this.$t('Chapters_Saved').toString()
+          })
+        })
       }
     }
   },
@@ -247,5 +308,8 @@ export default Vue.extend({
     background-color: white;
     padding: 0 0.5em;
   }
+}
+.card a {
+  color: var(--biolet);
 }
 </style>

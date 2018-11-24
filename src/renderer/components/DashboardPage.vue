@@ -106,10 +106,6 @@ export default Vue.extend({
     display: none;
   }
   .card {
-    padding: 1em;
-    background: white;
-    box-shadow: 3px 2px 5px darkgrey;
-    margin-top: 15px;
     &:last-child {
       margin-bottom: 15px;
     } 
