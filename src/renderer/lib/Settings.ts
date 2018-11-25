@@ -1,9 +1,11 @@
 export type SaveSettings = {
   lang: string
+  offline: boolean
 }
 
 export const defaultSettings: SaveSettings = {
-  lang: 'en'
+  lang: 'en',
+  offline: false
 }
 
 export function getSettings (): SaveSettings {

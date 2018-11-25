@@ -18,6 +18,12 @@
           <option :key="'langs_' + lang[0]" v-for="lang in langsAvailable" :value="lang[0]">{{ lang.join(' - ') }}</option>
         </select>
       </p>
+      <p>
+        <label>
+          <input type="checkbox" name="offline" v-model="savedSettings.offline" />
+          {{ $t('Offline_mode') }}
+        </label>
+      </p>
       <hr>
     </div>
   </div>

@@ -1,4 +1,5 @@
 import { db, Novel, Chapter, Comment } from './Database'
+import { getSettings } from './Settings';
 
 export type WebsiteStyle = {
   readonly name?: Partial<CSSStyleDeclaration>
@@ -55,6 +56,9 @@ export default class Website {
   
   public async loadNovels (): Promise<Novel[]> {
     try {
+      if (getSettings().offline) {
+        throw Error('Offline mode')
+      }
       const novelsRequest = await this.website.getNovels()
       const novelsPromise = novelsRequest.map((novel: Novel): Promise<Novel> => Promise.resolve(db.novels.get({ title: novel.title, website: this.website.slug }))
       .then((result: Novel | undefined): Promise<number> | number => {
@@ -98,7 +102,7 @@ export default class Website {
     const shouldRefresh = refresh || (novel.lastUpdate.getTime() + 300 * 1000) < new Date().getTime()
     const chapters = await db.chapters.where({ novel: novelId }).toArray()
     let novelResponse: NovelResponse = { novel, chapters }
-    if (shouldRefresh || chapters.length === 0) {
+    if (!getSettings().offline && (shouldRefresh || chapters.length === 0)) {
       try {
         novelResponse = await this.website.getNovel(novel)
         if (novelResponse.novel.id !== undefined) {
@@ -147,7 +151,7 @@ export default class Website {
     const shouldRefresh = refresh || (chapter.lastUpdate.getTime() + 300 * 1000) < new Date().getTime()
     const chapterResponse: ChapterResponse = { novel, chapter, chapters }
     
-    if (shouldRefresh || chapterResponse.chapter.content === '') {
+    if (!getSettings().offline && (shouldRefresh || chapterResponse.chapter.content === '')) {
       chapterResponse.chapter = await this.website.getChapter(novel, chapterResponse.chapter)
       chapterResponse.chapter.lastUpdate = new Date()
       db.chapters.put(chapterResponse.chapter)
@@ -156,7 +160,10 @@ export default class Website {
   }
   
   public async loadComments (novel: Novel, chapter: Chapter): Promise<Comment[]> {
-    return this.website.getComments(novel, chapter)
+    if (!getSettings().offline) {
+      return this.website.getComments(novel, chapter)
+    }
+    return []
   }
   
   public async nextChapter (current: Chapter): Promise<ChapterResponse> {
