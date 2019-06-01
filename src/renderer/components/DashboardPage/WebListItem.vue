@@ -1,6 +1,6 @@
 <template>
     <button type="button" class="website-item" @click="onSelected">
-        <img :src="website.icon" width='124' :alt="website.name" />
+        <img :style="website.style.iconDashboard" :src="website.icon" width='124' :alt="website.name" />
         <h3 :style="website.style.name">{{website.name}}</h3>
     </button>
 </template>
@@ -32,6 +32,7 @@ export default Vue.extend({
   padding: 0.5em;
   cursor: pointer;
   border: none;
+  width: 150px;
   &:hover {
       background-color: rgba(64, 185, 255, 0.74)
   }

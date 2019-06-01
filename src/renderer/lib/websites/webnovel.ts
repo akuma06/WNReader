@@ -243,7 +243,11 @@ export default class Webnovel implements WebsiteLoader {
   public get slug (): string { return 'webnovel' }
   public get url (): string { return 'https://www.webnovel.com' }
   public get icon (): string { return 'https://m.webnovel.com/launcher-icon-4x.png' }
-  public style: WebsiteStyle = {}
+  public style: WebsiteStyle = {
+    name: { color: 'white', backgroundColor: '#3b66f5' },
+    header: { backgroundColor: '#3b66f5', color: 'white' },
+    buttonHeader: { color: 'white', borderColor: 'white' }
+  }
 
   private async fecthList (page: number = 1): Promise<Novel[]> {
     const novels = new Novels()

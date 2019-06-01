@@ -19,6 +19,9 @@
         </div>
       </div>
     </div>
+    <div class="pages" v-if="novels.length > 0 && !loading">
+      <a href="#" @click.prevent="handlePage(i)" v-for="i in pages" :class="((i - 1) == page) ? 'selected' : ''" :key="'link-page' + i">{{ i }}</a>
+    </div>
     <div class="novels-list" v-if="novels.length > 0 && !loading">
       <novel-list-item
       v-for="novel in filteredNovels"
@@ -55,6 +58,8 @@ type WebsiteData = {
   selectedTags: string[]
   searchFocus: boolean
   drpOver: boolean
+  page: number
+  nbResults: number
 }
 export default Vue.extend({
   name: 'WebsitePage',
@@ -73,7 +78,9 @@ export default Vue.extend({
       tags: [],
       selectedTags: [],
       searchFocus: false,
-      drpOver: false
+      drpOver: false,
+      page: 0,
+      nbResults: 0
     }
   },
   metaInfo () {
@@ -96,31 +103,32 @@ export default Vue.extend({
         }
       }
     },
-    reload () {
+    async reload () {
       if (this.websiteModel !== null) {
+        this.page = 0
         const websiteModel = this.websiteModel
+        this.novels = []
+        const tags = []
         this.loading = true
-        websiteModel.loadNovels().then(data => {
+        console.time('data')
+        for await (let novel of websiteModel.loadNovels()) {
           this.loading = false
-          if (data.length > 0) {
-            this.novels = data
-          }
-          return data
-        }).then(data => {
-          if (data.length > 0) {
-            this.tags = [...new Set(data.map(novel => novel.tags).reduce((acc, tags) => acc.concat(tags, [])))]
-          }
-          return data
-        }).catch(console.log.bind(console))
+          this.novels.push(novel)
+          tags.push(...novel.tags)
+        }
+        this.tags = [...new Set(tags)]
+        console.timeEnd('data')
       }
     },
     handleTag (tag: string) {
+      this.page = 0
       if (tag !== '') {
         this.selectedTags.push(tag)
         this.filterNovels = ''
       }
     },
     removeTag (tag: string) {
+      this.page = 0
       if (tag !== '') {
         const ind = this.selectedTags.lastIndexOf(tag)
         if (ind !== null) {
@@ -130,8 +138,17 @@ export default Vue.extend({
     },
     handleSearchDelete () {
       if (this.filterNovels === '' && this.selectedTags.length > 0) {
+        this.page = 0
         this.selectedTags.pop()
       }
+    },
+    handlePage (index: number) {
+      this.page = index - 1
+    }
+  },
+  watch: {
+    filterNovels () {
+      this.page = 0
     }
   },
   computed: {
@@ -145,16 +162,31 @@ export default Vue.extend({
       return null
     },
     filteredNovels (): Novel[] {
+      let novels: Novel[] = []
+      const { novelsPerPage } = this.websiteModel!.website
       if (this.filterNovels === '' && this.selectedTags.length === 0) {
-        return this.novels
+        novels = this.novels
+      } else {
+        novels = this.novels.filter(novel => novel.title.match(new RegExp(this.filterNovels, 'i')) !== null && this.selectedTags.every(tag => novel.tags.lastIndexOf(tag) > -1))
       }
-      return this.novels.filter(novel => novel.title.match(new RegExp(this.filterNovels, 'i')) !== null && this.selectedTags.every(tag => novel.tags.lastIndexOf(tag) > -1))
+      this.nbResults = novels.length
+      if (novelsPerPage !== undefined && novelsPerPage > 0) {
+        return novels.slice(this.page * novelsPerPage, (this.page + 1) * novelsPerPage)
+      } else {
+        return novels
+      }
     },
     dropdownTags (): string[] {
       if (this.tags.length === 0 || this.filterNovels === '') {
         return []
       }
       return this.tags.filter(tag => (this.selectedTags.lastIndexOf(tag) === -1 && tag.match(new RegExp(this.filterNovels, 'i')) !== null)).slice(0, 5)
+    },
+    pages (): number {
+      if (this.websiteModel !== null && this.websiteModel.website.novelsPerPage !== undefined) {
+        return Math.ceil(this.nbResults / this.websiteModel.website.novelsPerPage)
+      }
+      return 0
     }
   },
   created () {
@@ -217,6 +249,7 @@ export default Vue.extend({
       padding-left: 5px; 
       .search-input {
         border: 1px solid lightgray;
+        background-color: white;
         border-radius: 15px;
         height: 70%;
         display: flex;
@@ -287,12 +320,24 @@ export default Vue.extend({
       }
     }
   }
-  .novels-list {
+  .novels-list, .pages {
     display: flex;
     flex-direction: row;
     background-color: var(--blackbg);
     flex-wrap: wrap;
     justify-content: center;
+  }
+  .pages {
+    align-items: center;
+    a {
+      margin: 0.25em;
+      font-size: 1em;
+      &.selected {
+        font-size: 1.2em;
+        text-decoration: underline;
+        font-weight: bold;
+      }
+    }
   }
 }
 </style>

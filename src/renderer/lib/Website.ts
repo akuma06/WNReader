@@ -1,10 +1,13 @@
 import { db, Novel, Chapter, Comment } from './Database'
 import { getSettings } from './Settings';
+(Symbol as any).asyncIterator = Symbol.asyncIterator || Symbol.for("Symbol.asyncIterator");
 
 export type WebsiteStyle = {
   readonly name?: Partial<CSSStyleDeclaration>
   readonly header?: Partial<CSSStyleDeclaration>
+  readonly iconDashboard?: Partial<CSSStyleDeclaration>
   readonly iconHeader?: Partial<CSSStyleDeclaration>
+  readonly buttonHeader?: Partial<CSSStyleDeclaration>
 }
 
 export const NoDataGivenException = Error('No data given')
@@ -19,6 +22,7 @@ export interface WebsiteLoader {
   readonly slug: string
   readonly icon: string
   readonly style: WebsiteStyle
+  readonly novelsPerPage?: number
 }
 
 export type WebsiteParameters = {
@@ -54,44 +58,45 @@ export default class Website {
     return this.website.name
   }
   
-  public async loadNovels (): Promise<Novel[]> {
+  public async *loadNovels (): AsyncIterableIterator<Novel> {
     try {
       if (getSettings().offline) {
         throw Error('Offline mode')
       }
+      console.time('getNovels')
       const novelsRequest = await this.website.getNovels()
-      const novelsPromise = novelsRequest.map((novel: Novel): Promise<Novel> => Promise.resolve(db.novels.get({ title: novel.title, website: this.website.slug }))
-      .then((result: Novel | undefined): Promise<number> | number => {
-        novel.website = this.website.slug
-        if (result === undefined) {
-          novel.lastUpdate = new Date()
-          return db.novels.add(novel)
-        } else if (result.id !== undefined) {
-          novel.description = (result.description !== '') ? result.description : novel.description
-          novel.bookmarked = result.bookmarked
-          novel.tags = (result.tags.length > 0) ? result.tags : novel.tags
-          novel.cover = (result.cover !== '') ? result.cover : novel.cover
-          db.novels.update(result.id, novel)
-          return result.id
-        } else {
-          throw Error('Id du résultat non défini')
+      console.timeEnd('getNovels')
+      if (novelsRequest.length === 0) {
+        this.novels = await db.novels.where({ website: this.website.slug }).toArray()
+        for (let novel of this.novels) {
+          yield novel
         }
-      }).then((id: number): Novel => {
-        if (novel.id === undefined) {
-          novel.id = id
+      } else {
+        for (let novel of novelsRequest) {
+          const novelDb = await db.novels.get({ title: novel.title, website: this.website.slug })
+          novel.website = this.website.slug
+          if (novelDb === undefined) {
+            novel.lastUpdate = new Date()
+            novel.id = await db.novels.add(novel)
+          } else if (novelDb.id !== undefined) {
+            novel.description = (novel.description === '' && novelDb.description !== '') ? novelDb.description : novel.description
+            novel.bookmarked = novelDb.bookmarked
+            novel.tags = (novel.tags.length === 0 && novelDb.tags.length > 0) ? novelDb.tags : novel.tags
+            novel.cover = (novel.cover === '' && novelDb.cover !== '') ? novelDb.cover : novel.cover
+            db.novels.update(novelDb.id, novel)
+            novel.id = novelDb.id
+          }
+          this.novels.push(novel)
+          yield novel
         }
-        return novel
-      })
-      )
-      this.novels = await Promise.all(novelsPromise)
+      }
     } catch (e) {
       console.error(e)
-      this.novels = []
-    }
-    if (this.novels.length === 0) {
       this.novels = await db.novels.where({ website: this.website.slug }).toArray()
+      for (let novel of this.novels) {
+        yield novel
+      }
     }
-    return this.novels
   }
   
   public async loadNovel (novelId: number, refresh: boolean = false): Promise<NovelResponse> {
@@ -104,7 +109,9 @@ export default class Website {
     let novelResponse: NovelResponse = { novel, chapters }
     if (!getSettings().offline && (shouldRefresh || chapters.length === 0)) {
       try {
+        console.time('getNovel')
         novelResponse = await this.website.getNovel(novel)
+        console.timeEnd('getNovel')
         if (novelResponse.novel.id !== undefined) {
           db.novels.update(novelResponse.novel.id, novelResponse.novel)
         }
@@ -134,6 +141,9 @@ export default class Website {
     }
     if (novelResponse.chapters.length === 0) {
       novelResponse.chapters = chapters
+    }
+    if (novelResponse.novel.cover === '') {
+      novelResponse.novel.cover = require('../assets/book_icon.svg')
     }
     return novelResponse
   }

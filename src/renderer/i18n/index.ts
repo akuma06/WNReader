@@ -5,7 +5,7 @@ import VueI18n from 'vue-i18n'
 import { getSettings } from '../lib/Settings'
 
 Vue.use(VueI18n)
-declare const __static: string;
+declare const __static: string
 type keyvalue = {
   [key: string]: string
 }

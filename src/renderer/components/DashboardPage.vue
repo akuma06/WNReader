@@ -28,6 +28,17 @@
       </div>
       <p v-else>{{ $t('no_bookmarks_msg') }}</p>
     </div>
+    <div class="card blue" v-if="lastRead.length > 0">
+      <h1>{{ $t('Last_Read') }}</h1>
+      <div class="bookmark-list">
+        <novel-list-item
+          v-for="(novel, key) in lastRead"
+          :novel="novel"
+          @selected="handleNovel"
+          :key="'lrbook_' + key"
+        />
+      </div>
+    </div>
     <settings-button />
   </div>
 </template>
@@ -44,6 +55,7 @@ import { Novel, db, Bookmarked } from '../lib/Database'
 type DashboardPageData = {
   websites: typeof websites
   novels: Novel[]
+  lastRead: Novel[]
   filterWebsite: string
 }
 
@@ -65,12 +77,38 @@ export default Vue.extend({
     },
     handleNovel (novel: Novel) {
       if (novel !== null && novel.id !== undefined) this.$router.push({name: 'novel-page', params: { novel: novel.id.toString(), website: novel.website }})
+    },
+    async *findLastRead (): AsyncIterableIterator<Novel | undefined> {
+      const id: number[] = []
+      const keys = await db.chapters.orderBy('lastUpdate').reverse().primaryKeys()
+      console.log(keys)
+      for (const key of keys) {
+        const chapter = await db.chapters.get(key)
+        if (chapter !== undefined && id.lastIndexOf(chapter.novel) === -1) {
+          id.push(chapter.novel)
+        }
+        if (chapter === undefined || id.length >= 10) {
+          break
+        }
+      }
+      console.log(id)
+      for (const i of id) {
+        yield db.novels.get(i)
+      }
+    },
+    async generateLastRead () {
+      for await (const novel of this.findLastRead()) {
+        if (novel !== undefined) {
+          this.lastRead.push(novel)
+        }
+      }
     }
   },
   data (): DashboardPageData {
     return {
       websites,
       novels: [],
+      lastRead: [],
       filterWebsite: ''
     }
   },
@@ -90,6 +128,7 @@ export default Vue.extend({
     db.novels.where({ bookmarked: Bookmarked.Yes }).toArray().then(novels => {
       this.novels = novels
     })
+    this.generateLastRead()
   }
 })
 </script>
@@ -114,6 +153,15 @@ export default Vue.extend({
     }
     &.biolet {
       background-color: var(--biolet);
+      h1 {
+        color: white;
+      } 
+      > p {
+        color: white;
+      }
+    }
+    &.blue {
+      background-color: rgb(19, 92, 202);
       h1 {
         color: white;
       } 
@@ -161,6 +209,7 @@ export default Vue.extend({
     display: flex;
     flex-direction: row;
     flex-wrap: wrap;
+    justify-content: center;
   }
   .bookmark-list {
     display: flex;

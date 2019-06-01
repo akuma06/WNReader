@@ -1,19 +1,18 @@
 <template>
   <div class="novel" v-if="novel !== null" @scroll="handleScroll">
     <div class="novel-header" ref="novelHeader" :style="websiteModel.website.style.header">
-      <div class="left">
-        <router-link :to="{ name: 'website-page', params: { website: novel.website }}" :style="websiteModel.website.style.header" class="back" :title="$t('Back')">
-          <font-awesome-icon icon="arrow-left" size="lg" />
-        </router-link>
-        <img :src="novel.cover" :alt="novel.title" :style="websiteModel.website.style.iconHeader" />
-        <h1>{{novel.title}}</h1>
-      </div>
+      <router-link :to="{ name: 'website-page', params: { website: novel.website }}" :style="websiteModel.website.style.header" class="back" :title="$t('Back')">
+        <font-awesome-icon icon="arrow-left" size="lg" />
+      </router-link>
+      <img :src="novel.cover" :alt="novel.title" :style="websiteModel.website.style.iconHeader" />
+      <h1 :title="novel.title">{{novel.title}}</h1>
       <div class="tools">
         <a
           href="#"
           @click.prevent="handleContinue"
           :title="$t('Continue_Reading')"
           v-show="novel.lastRead"
+          :style="websiteModel.website.style.buttonHeader"
         >
           <font-awesome-icon icon="book-reader" />&nbsp;{{ $t('Continue') }}
         </a>
@@ -22,6 +21,7 @@
           @click.prevent="handleBookmark"
           :title="$t('Add_to_bookmarks')"
           :class="{ enabled: (novel.bookmarked === Bookmarked.Yes) }"
+          :style="websiteModel.website.style.buttonHeader"
         >
           <font-awesome-icon icon="bookmark" />
         </a>
@@ -29,6 +29,7 @@
           href="#"
           @click.prevent="resetChapters"
           :title="$t('Refresh')"
+          :style="websiteModel.website.style.buttonHeader"
         >
           <font-awesome-icon icon="sync-alt" />
         </a>
@@ -36,6 +37,7 @@
           href="#"
           @click.prevent="saveNovel"
           :title="$t('Save')"
+          :style="websiteModel.website.style.buttonHeader"
         >
           <font-awesome-icon icon="save" />
         </a>
@@ -90,6 +92,7 @@ type NovelPageData = {
   websiteModel: Website | null
   Bookmarked: typeof Bookmarked
   lastFocus: HTMLButtonElement | null
+  saving: boolean
 }
 
 export default Vue.extend({
@@ -107,7 +110,8 @@ export default Vue.extend({
       loading: true,
       websiteModel: (websiteLoader !== undefined) ? new Website({ website: websiteLoader }) : null,
       Bookmarked,
-      lastFocus: null
+      lastFocus: null,
+      saving: false
     }
   },
   metaInfo () {
@@ -173,11 +177,13 @@ export default Vue.extend({
     reload () {
       if (this.websiteModel !== null) {
         this.loading = true
+        console.time('novelData')
         this.websiteModel.loadNovel(parseInt(this.$route.params.novel))
           .then(novelResponse => {
             this.loading = false
             this.novel = novelResponse.novel
             this.chapters = novelResponse.chapters
+            console.timeEnd('novelData')
             return novelResponse
           }).catch(e => {
             this.loading = false
@@ -195,7 +201,8 @@ export default Vue.extend({
       }
     },
     saveNovel () {
-      if (this.websiteModel !== null && this.novel !== null) {
+      if (this.websiteModel !== null && this.novel !== null && !this.saving) {
+        this.saving = true
         this.$notify({
           group: 'main',
           title: this.$t('Saving_Chapters').toString(),
@@ -214,8 +221,10 @@ export default Vue.extend({
           })
           this.$notify({
             group: 'main',
-            title: this.$t('Chapters_Saved').toString()
+            title: this.$t('Chapters_Saved').toString(),
+            type: 'success'
           })
+          this.saving = false
         })
       }
     }
@@ -225,6 +234,17 @@ export default Vue.extend({
     document.addEventListener('keydown', this.handleKeys)
   },
   beforeDestroy () {
+    if (this.saving) {
+      this.$notify({
+        group: 'main',
+        clean: true
+      })
+      this.$notify({
+        group: 'main',
+        title: this.$t('Saving_interrupted').toString(),
+        type: 'error'
+      })
+    }
     document.removeEventListener('keydown', this.handleKeys)
   }
 })
@@ -237,6 +257,7 @@ export default Vue.extend({
   overflow: auto;
   .novel-header {
     display: flex;
+    flex-wrap: wrap;
     flex-direction: row;
     justify-content: space-between;
     margin-top: 120px;
@@ -245,43 +266,46 @@ export default Vue.extend({
     position: sticky;
     top: 0px;
     z-index: 3;
-    .left {
-      display: flex;
-      .back {
-        color: black;
-        margin: 0 15px;
-        svg {
-          height: 45px;
-          widows: 45px;
-        }
-      }
-      img {
-        height: 150px;
-        border: 5px solid white;
-        position: relative;
-        top: -115px;
-        transition: height .2s, top .2s, width .2s, border-width .2s, border-radius .2s;
-        &.sticky {
-          height: 45px;
-          border-radius: 2em;
-          top: 0px;
-          width: 45px;
-          border-width: 0;
-        }
-      }
-      h1 {
-        padding: 5px;
-        font-size: 25px;
-        margin: 0;
-        line-height: 35px;
-        font-family: 'Gill Sans', 'Gill Sans MT', Calibri, 'Trebuchet MS', sans-serif
+    .back {
+      color: black;
+      margin: 0 15px;
+      svg {
+        height: 45px;
+        widows: 45px;
       }
     }
+    img {
+      height: 150px;
+      max-width: min-content;
+      overflow: hidden;
+      border: 5px solid white;
+      position: relative;
+      top: -115px;
+      transition: height .2s, top .2s, width .2s, border-width .2s, border-radius .2s;
+      &.sticky {
+        height: 45px;
+        border-radius: 2em;
+        top: 0px;
+        width: 45px;
+        border-width: 0;
+      }
+    }
+    h1 {
+      padding: 5px;
+      font-size: 25px;
+      margin: 0;
+      line-height: 35px;
+      white-space: nowrap;
+      text-overflow: ellipsis;
+      overflow: hidden;
+      flex-basis: 0;
+      flex-grow: 20;
+      font-family: 'Gill Sans', 'Gill Sans MT', Calibri, 'Trebuchet MS', sans-serif
+    }
     .tools {
-      display: flex;
-      align-content: flex-end;
       align-self: center;
       padding-right: 2em;
+      white-space: nowrap;
       a {
         color: var(--biolet);
         border: 1px solid var(--biolet);

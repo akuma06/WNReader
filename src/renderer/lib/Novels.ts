@@ -35,7 +35,7 @@ export default class Novels {
     /**
      * push
      */
-    public push(...novels: Novel[]) {
+    public push (...novels: Novel[]) {
       novels.forEach(novel => {
         if (novel.slug === '') {
           novel.slug = slugify(novel.title)

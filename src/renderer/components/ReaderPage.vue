@@ -1,30 +1,33 @@
 <template>
   <div v-if="chapter !== null" class="reader">
-    <div class="header" :class="{ show: showHeader, hide: !showHeader }" ref="readerHeader" @mouseover="handleOverHeader" @mouseout="enableFade = true">
-      <div class="left">
-        <router-link :to="{ name: 'novel-page', params: { novel: novel.id.toString(), website: websiteModel.website.slug }}" :title="novel.title">
-          <img src="@/assets/logo.png" />
-        </router-link>
-        <h1>{{ chapter.title }}</h1>
+    <div class="top">
+      <div class="header" :class="{ show: showHeader, hide: !showHeader }" ref="readerHeader" @mouseover="handleOverHeader" @mouseout="enableFade = true">
+        <div class="left">
+          <router-link :to="{ name: 'novel-page', params: { novel: novel.id.toString(), website: websiteModel.website.slug }}" :title="novel.title">
+            <img src="@/assets/logo.png" />
+          </router-link>
+          <h1>{{ chapter.title }}</h1>
+        </div>
+        <div class="tools">
+          <a
+            href="#"
+            @click.prevent="handleBookmark"
+            :title="$t('Add_to_bookmarks')"
+            :class="{ enabled: (novel.bookmarked === Bookmarked.Yes) }"
+          >
+            <font-awesome-icon icon="bookmark" />
+          </a>
+        </div>
       </div>
-      <div class="tools">
-        <a
-          href="#"
-          @click.prevent="handleBookmark"
-          :title="$t('Add_to_bookmarks')"
-          :class="{ enabled: (novel.bookmarked === Bookmarked.Yes) }"
-        >
-          <font-awesome-icon icon="bookmark" />
-        </a>
-      </div>
+      <reader-slider-vue :chapters="chapters" :current="chapter" />
     </div>
-    <div class="main" ref="readerContent" @scroll="handleScroll" @mousewheel="handleWheel">
+    <div class="main" ref="readerContent" @scroll="handleScroll" @wheel="handleWheel">
       <div class="content" ref="content">
         <h1 class="chapter-title" v-show="!this.loading && chapter.title !== ''">{{ chapter.title }}</h1>
         <div class="chapter-content" v-if="!this.loading && chapter.content !== '' " v-html="chapter.content" @click.prevent="handleContentClick"></div>
         <div class="chapter-content" v-else-if="!this.loading && chapter.content === '' ">
           <p style="text-align:center;">
-            {{ 'Network_Error' }}<br>
+            {{ $t('Network_Error') }}<br>
             <a href="#" @click.prevent="reload" v-text="$t('Try_Again')"></a>
           </p>
         </div>
@@ -93,6 +96,7 @@ import Vue from 'vue'
 import { Chapter, Novel, db, Comment, Bookmarked } from '../lib/Database'
 import Website from '../lib/Website'
 import websites from '../lib/websites'
+import ReaderSliderVue from './ReaderPage/Slider.vue'
 import CommentVue from './ReaderPage/Comment.vue'
 import SearchVue from './ReaderPage/Search.vue'
 
@@ -124,6 +128,7 @@ export default Vue.extend({
   name: 'ReaderPage',
   components: {
     CommentVue,
+    ReaderSliderVue,
     SearchVue
   },
   data (): ReaderPageData {
@@ -136,7 +141,7 @@ export default Vue.extend({
       comments: [],
       showPanel: Panels.None,
       enableFade: true,
-      showHeader: true,
+      showHeader: false,
       loading: true,
       enableSearch: false,
       Panels,
@@ -168,6 +173,7 @@ export default Vue.extend({
         this.websiteModel.nextChapter(this.chapter)
           .then(chapterResponse => {
             this.chapter = chapterResponse.chapter
+            this.chapters = chapterResponse.chapters
             this.checkPosition()
             this.loading = false
           })
@@ -179,6 +185,7 @@ export default Vue.extend({
         this.websiteModel.prevChapter(this.chapter)
           .then(chapterResponse => {
             this.chapter = chapterResponse.chapter
+            this.chapters = chapterResponse.chapters
             this.checkPosition()
             this.loading = false
           })
@@ -245,17 +252,17 @@ export default Vue.extend({
         this.showPanel = Panels.None
       }
     },
-    handleWheel (e: MouseWheelEvent) {
+    handleWheel (e: WheelEvent) {
       if (this.loading || this.chapter === null) {
         return
       }
       if (timeoutAnim !== null) {
         clearTimeout(timeoutAnim)
       }
-      if (e.wheelDelta > 0 && this.chapter.prev !== '') {
+      if (e.deltaY < 0 && this.chapter.prev !== '') {
         this.hidedown()
         timeoutAnim = setTimeout(() => this.hidedown(undefined, true), 200)
-      } else if (e.wheelDelta < 0 && this.chapter.next !== '') {
+      } else if (e.deltaY > 0 && this.chapter.next !== '') {
         this.hideup()
         timeoutAnim = setTimeout(() => this.hideup(undefined, true), 200)
       }
@@ -370,8 +377,12 @@ export default Vue.extend({
         }
         if (this.enableFade) {
           this.showHeader = true
+          readerHeader.style.display = 'flex'
           timeoutFade = setTimeout(() => {
             this.showHeader = false
+            timeoutFade = setTimeout(() => {
+              readerHeader.style.display = 'none'
+            }, 200)
           }, 4000)
         }
       }
@@ -467,58 +478,61 @@ export default Vue.extend({
   display: flex;
   flex-direction: column;
   height: 100%;
-  .header {
-    width: 100%;
-    display: flex;
-    flex-direction: row;
-    justify-content: space-between;
-    padding: 5px;
+  .top {
     position: fixed;
     top: 0px;
     left: 0px;
     z-index: 4;
-    background-color: white;
-    color: black;
-    font-family: 'Nunito Sans','SF Pro Text','SF Pro Icons',Roboto,'Helvetica Neue',Helvetica,Arial,sans-serif;
-    transition: opacity 1s;
-    &.show {
-      opacity: 1;
-      animation: fadeIn .2s ease;
-    }
-    &.hide {
-      opacity: 0;
-      animation: fadeOut .2s ease;
-    }
-    .left {
+    width: 100%;
+    .header {
+      width: 100%;
       display: flex;
-      img {
-        height: 25px;
-        width: 25px;
-        margin: 0 10px;
+      flex-direction: row;
+      justify-content: space-between;
+      padding: 5px;
+      background-color: white;
+      color: black;
+      font-family: 'Nunito Sans','SF Pro Text','SF Pro Icons',Roboto,'Helvetica Neue',Helvetica,Arial,sans-serif;
+      transition: opacity 1s;
+      &.show {
+        opacity: 1;
+        animation: fadeIn .2s ease;
       }
-      h1 {
-        font-size: 18px;
-        font-weight: bold;
-        line-height: 25px;
-        padding: 0;
-        margin: 0;
+      &.hide {
+        opacity: 0;
+        animation: fadeOut .2s ease;
       }
-    }
-    .tools {
-      display: flex;
-      align-content: flex-end;
-      align-self: center;
-      padding-right: 2em;
-      a {
-        color: var(--biolet);
-        border: 1px solid var(--biolet);
-        transition: border .2s, color .2s, background-color .2s;
-        padding: 4px;
-        border-radius: 5px;
-        &.enabled {
-          color: white;
-          background-color: var(--biolet);
-          border: 0;
+      .left {
+        display: flex;
+        img {
+          height: 25px;
+          width: 25px;
+          margin: 0 10px;
+        }
+        h1 {
+          font-size: 18px;
+          font-weight: bold;
+          line-height: 25px;
+          padding: 0;
+          margin: 0;
+        }
+      }
+      .tools {
+        display: flex;
+        align-content: flex-end;
+        align-self: center;
+        padding-right: 2em;
+        a {
+          color: var(--biolet);
+          border: 1px solid var(--biolet);
+          transition: border .2s, color .2s, background-color .2s;
+          padding: 4px;
+          border-radius: 5px;
+          &.enabled {
+            color: white;
+            background-color: var(--biolet);
+            border: 0;
+          }
         }
       }
     }
@@ -533,9 +547,10 @@ export default Vue.extend({
     text-align: justify;
     .content {
       width: 60%;
-      min-width: 700px;
+      min-width: 780px;
       max-width: 1200px;
       padding: 2.5em;
+      box-sizing: border-box;
       margin: auto;
       background-color: white;
       user-select: auto;
@@ -653,5 +668,15 @@ export default Vue.extend({
 }
 .card a {
   color: var(--biolet);
+}
+@media screen and (max-width: 800px) {
+  .main {
+    min-width: auto !important;
+    width: 100% !important;
+    .content {
+      min-width: auto !important;
+      width: 100% !important;
+    }
+  }
 }
 </style>

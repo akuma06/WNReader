@@ -26,13 +26,16 @@ function generateFeedURL (params: FeedEntriesRequest): string {
     }
     url += '/feed/'
   }
+  if (url.match(/[&?]$/) === null) {
+    url += '?'
+  }
   return url
 }
 
-async function getEntries (url: string, page: number = 1, maxEntries: number = 10): Promise<Items[]> {
+export async function getEntries (url: string, page: number = 1, maxEntries: number = 10): Promise<Items[]> {
   const items: Items[] = []
   try {
-    const feed = await new Parser().parseURL(`${url}?paged=${page}`)
+    const feed = await new Parser().parseURL(`${url}paged=${page}`)
     if (feed.items.length === maxEntries) {
       page++
       items.push(...await getEntries(url, page))
@@ -56,6 +59,7 @@ export async function getFeedEntries (params: FeedEntriesRequest): Promise<Items
 }
 
 export class Wordpress implements WebsiteLoader {
+  public overrideChapterTitle: boolean = false
   public getNovelsFromMenu ($: CheerioStatic) {
     return $('.menu')
       .first()
@@ -136,7 +140,7 @@ export class Wordpress implements WebsiteLoader {
         if (contentHTML !== null) {
           content = contentHTML
         }
-        if (chapter.title === '') {
+        if (this.overrideChapterTitle || chapter.title === '') {
           chapter.title = this.findChapterTitle($)
           chapter.slug = slugify(chapter.title)
         }

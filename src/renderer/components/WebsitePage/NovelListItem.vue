@@ -1,7 +1,7 @@
 <template>
     <button type="button" @click="onSelected" class="novel-item">
       <div class="cover-img" v-if="novel.cover !== ''">
-        <img :src="novel.cover" :alt="novel.title" />
+        <img :src="novel.cover" :alt="novel.title" referrerpolicy="no-referrer" />
         <h3>{{novel.title}}</h3>
       </div>
       <div class="cover" :style="{backgroundColor: randombg}" v-else>
