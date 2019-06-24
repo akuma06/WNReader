@@ -258,6 +258,9 @@ export default class Webnovel implements WebsiteLoader {
         if (result.msg === 'Success') {
           const { items } = result.data
           items.forEach(novel => {
+            if (novel.bookName === undefined) {
+              return;
+            }
             novels.add(
               novel.bookName,
               this.slug,
