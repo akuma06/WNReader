@@ -202,6 +202,7 @@ type ChapterReviewItemsEntity = {
   id: string
   content: string
   userId: number
+  appId: number
   userName: string
   role: number
   penName: string
@@ -371,7 +372,7 @@ export default class Webnovel implements WebsiteLoader {
     try {
       return (await this.fetchComments(novel, chapter, 1, true)).map((comment): Comment => {
         return {
-          avatar: `https:${comment.avatar}`,
+          avatar: `https://user-pic.webnovel.com/userheadimg/${comment.userId}-${comment.appId}/100.jpg?uut=${comment.UUT}`,
           username: comment.userName,
           content: comment.content,
           date: comment.updateTime
