@@ -1,6 +1,6 @@
 import sanitizeHtml from 'sanitize-html'
 
-export function sanitize(data: string) {
+export function sanitize (data: string) {
   return sanitizeHtml(data, {
     allowedTags: [
       'h3', 'h4', 'h5', 'h6', 'blockquote', 'p', 'a', 'ul', 'ol',
@@ -10,6 +10,6 @@ export function sanitize(data: string) {
     allowedAttributes: {
       a: [ 'href', 'name', 'target' ],
       img: [ 'src', 'width', 'height', 'style' ]
-    },
+    }
   })
 }

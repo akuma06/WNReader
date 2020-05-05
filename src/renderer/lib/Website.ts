@@ -1,6 +1,6 @@
 import { db, Novel, Chapter, Comment } from './Database'
 import { getSettings } from './Settings';
-(Symbol as any).asyncIterator = Symbol.asyncIterator || Symbol.for("Symbol.asyncIterator");
+(Symbol as any).asyncIterator = Symbol.asyncIterator || Symbol.for('Symbol.asyncIterator')
 
 export type WebsiteStyle = {
   readonly name?: Partial<CSSStyleDeclaration>
@@ -43,21 +43,21 @@ export interface ChapterResponse {
 
 export default class Website {
   public novelId: string;
-  
+
   public website: WebsiteLoader;
-  
+
   public novels: Array<Novel>;
-  
+
   public constructor (parameters: WebsiteParameters) {
     this.novelId = parameters.novel || ''
     this.website = parameters.website
     this.novels = []
   }
-  
+
   public get name () {
     return this.website.name
   }
-  
+
   public async *loadNovels (): AsyncIterableIterator<Novel> {
     try {
       if (getSettings().offline) {
@@ -98,7 +98,7 @@ export default class Website {
       }
     }
   }
-  
+
   public async loadNovel (novelId: number, refresh: boolean = false): Promise<NovelResponse> {
     const novel = await db.novels.get(novelId)
     if (novel === undefined) {
@@ -147,7 +147,7 @@ export default class Website {
     }
     return novelResponse
   }
-  
+
   public async loadChapter (novelId: number, chapterId: number, refresh: boolean = false): Promise<ChapterResponse> {
     const novel = await db.novels.get(novelId)
     if (novel === undefined) {
@@ -160,7 +160,7 @@ export default class Website {
     const chapters = await db.chapters.where({ novel: novelId }).toArray()
     const shouldRefresh = refresh || (chapter.lastUpdate.getTime() + 300 * 1000) < new Date().getTime()
     const chapterResponse: ChapterResponse = { novel, chapter, chapters }
-    
+
     if (!getSettings().offline && (shouldRefresh || chapterResponse.chapter.content === '')) {
       chapterResponse.chapter = await this.website.getChapter(novel, chapterResponse.chapter)
       chapterResponse.chapter.lastUpdate = new Date()
@@ -168,24 +168,24 @@ export default class Website {
     }
     return chapterResponse
   }
-  
+
   public async loadComments (novel: Novel, chapter: Chapter): Promise<Comment[]> {
     if (!getSettings().offline) {
       return this.website.getComments(novel, chapter)
     }
     return []
   }
-  
+
   public async nextChapter (current: Chapter): Promise<ChapterResponse> {
     if (current.next === undefined) {
       throw Error('No next chapter found')
     }
     const result = await db.chapters.where('title')
-    .equals(current.next)
-    .or('slug')
-    .equals(current.next)
-    .or('url')
-    .equals(current.next).first()
+      .equals(current.next)
+      .or('slug')
+      .equals(current.next)
+      .or('url')
+      .equals(current.next).first()
     if (result === undefined) {
       if (current.next !== undefined && current.next.match('http')) {
         const newChapter = await db.chapters.put({ url: current.next, novel: current.novel, title: '', slug: '', content: '', lastUpdate: new Date(), prev: current.slug })
@@ -199,17 +199,17 @@ export default class Website {
     }
     return this.loadChapter(current.novel, result.id)
   }
-  
+
   public async prevChapter (current: Chapter): Promise<ChapterResponse> {
     if (current.prev === undefined) {
       throw Error('No previous chapter found')
     }
     const result = await db.chapters.where('title')
-    .equals(current.prev)
-    .or('slug')
-    .equals(current.prev)
-    .or('url')
-    .equals(current.prev).first()
+      .equals(current.prev)
+      .or('slug')
+      .equals(current.prev)
+      .or('url')
+      .equals(current.prev).first()
     if (result === undefined) {
       if (current.prev !== undefined && current.prev.match('http')) {
         const newChapter = await db.chapters.put({ url: current.prev, novel: current.novel, title: '', slug: '', content: '', lastUpdate: new Date(), next: current.slug })
@@ -223,7 +223,7 @@ export default class Website {
     }
     return this.loadChapter(current.novel, result.id)
   }
-  
+
   public async cacheNovel (novel: Novel, ondata: (chapter: Chapter, index: number, chapters: Chapter[]) => void, done: () => void) {
     if (novel.id !== undefined) {
       const { chapters } = await this.loadNovel(novel.id, true)

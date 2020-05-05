@@ -6,7 +6,7 @@ import Novels from '../Novels'
 import Chapters from '../Chapters'
 import { Wordpress, getFeedEntries, getEntries } from '../helpers/Wordpress'
 import slugify from 'slugify'
-import { sanitize } from '../helpers/sanitizer';
+import { sanitize } from '../helpers/sanitizer'
 
 export default class LightNovelsTranslations extends Wordpress implements WebsiteLoader {
   public get name (): string { return 'Light Novels Translations' }

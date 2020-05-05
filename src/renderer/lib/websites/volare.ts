@@ -4,7 +4,7 @@ import { WebsiteLoader, NovelResponse, WebsiteStyle, NoDataGivenException } from
 import { Novel, Chapter, Comment, db } from '../Database'
 import Novels from '../Novels'
 import Chapters from '../Chapters'
-import WuxiaWorld, { SearchResponse } from './wuxiaworld';
+import WuxiaWorld, { SearchResponse } from './wuxiaworld'
 
 export default class Volare extends WuxiaWorld implements WebsiteLoader {
   public get name (): string { return 'Volare' }
@@ -13,7 +13,7 @@ export default class Volare extends WuxiaWorld implements WebsiteLoader {
   public get icon (): string { return 'https://www.volarenovels.com/images/logo-no-text.svg' }
   public style: WebsiteStyle = {
     name: { color: 'white', backgroundColor: '#8e44ad' },
-    iconDashboard: { backgroundColor: '#8e44ad' }, 
+    iconDashboard: { backgroundColor: '#8e44ad' },
     iconHeader: { borderColor: '#8e44ad', backgroundColor: '#8e44ad' },
     header: { backgroundColor: '#8e44ad', color: 'white' },
     buttonHeader: { color: 'white', borderColor: 'white' }
@@ -23,21 +23,21 @@ export default class Volare extends WuxiaWorld implements WebsiteLoader {
     const novels = new Novels()
     try {
       const json = await axios.post(`${this.url}/api/novels/search`,
-      {
-        active: null,
-        language: null,
-        count: 300,
-        searchAfter: null,
-        sortAsc: true,
-        sortType: "Name",
-        tags: [],
-        title: ""
-      })
+        {
+          active: null,
+          language: null,
+          count: 300,
+          searchAfter: null,
+          sortAsc: true,
+          sortType: 'Name',
+          tags: [],
+          title: ''
+        })
       if (json.status === 200) {
         const result = json.data as SearchResponse
         if (result.result) {
           for (const item of result.items) {
-            const tags = (item.status === 2) ? ["Completed", ...item.tags] : item.tags
+            const tags = (item.status === 2) ? ['Completed', ...item.tags] : item.tags
             const cover = (item.coverUrl !== null) ? item.coverUrl : ''
             novels.add(item.name, this.slug, item.slug, item.synopsis, cover, tags)
           }

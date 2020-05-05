@@ -260,7 +260,7 @@ export default class Webnovel implements WebsiteLoader {
           const { items } = result.data
           items.forEach(novel => {
             if (novel.bookName === undefined) {
-              return;
+              return
             }
             novels.add(
               novel.bookName,

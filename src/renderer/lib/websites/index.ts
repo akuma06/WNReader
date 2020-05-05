@@ -11,9 +11,9 @@ import Webnovel from './webnovel'
 import ReadLightNovel from './readligthnovel'
 import Volare from './volare'
 import LightNovelsTranslations from './lightnovelstranslations'
-import RadiantTranslations from './radianttranslations';
-import BcatTranslations from './bcatranslation';
-import WuxiaWorld from './wuxiaworld';
+import RadiantTranslations from './radianttranslations'
+import BcatTranslations from './bcatranslation'
+import WuxiaWorld from './wuxiaworld'
 
 const websites: {
 [websiteID: string]: WebsiteLoader

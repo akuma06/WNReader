@@ -41,15 +41,15 @@ export default class WuxiaWorld implements WebsiteLoader {
     const novels = new Novels()
     try {
       const json = await axios.post(`${this.url}/api/novels/search`,
-      {
-        active: null,
-        count: 300,
-        searchAfter: 0,
-        sortAsc: true,
-        sortType: "Name",
-        tags: [],
-        title: ""
-      })
+        {
+          active: null,
+          count: 300,
+          searchAfter: 0,
+          sortAsc: true,
+          sortType: 'Name',
+          tags: [],
+          title: ''
+        })
       if (json.status === 200) {
         const result = json.data as SearchResponse
         if (result.result) {
