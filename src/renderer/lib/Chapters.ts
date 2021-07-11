@@ -19,7 +19,7 @@ export default class Chapters {
     }
 
     public add (title: string, novel: number, url: string, content: string = ''): string {
-      const slug = slugify(title)
+      const slug = `novel_${novel}_${slugify(title)}`
       const currentIndex = this.chapters.length
       this.index.set(slug, currentIndex)
       if (currentIndex > 0) {
@@ -27,7 +27,7 @@ export default class Chapters {
       }
       this.chapters.push({
         title,
-        slug: slugify(title),
+        slug: slug,
         novel,
         url,
         content,
