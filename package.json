@@ -86,7 +86,7 @@
     "@types/sanitize-html": "^1.18.2",
     "@types/webpack-env": "^1.13.6",
     "@types/xml2js": "^0.4.3",
-    "ajv": "^6.5.0",
+    "ajv": "^6.12.3",
     "babel-core": "^6.26.3",
     "babel-eslint": "^8.2.3",
     "babel-loader": "^7.1.4",
